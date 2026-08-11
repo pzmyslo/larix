@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
+
 <meta charset="UTF-8">
 
 <meta
@@ -11,12 +12,22 @@
              user-scalable=no"
 >
 
-<title>GPS Web Test</title>
+<title>Traccar Mini Map</title>
+
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+>
+
+<script
+    src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js">
+</script>
 
 <style>
 
 html,
-body {
+body,
+#map {
     margin: 0;
     padding: 0;
 
@@ -25,451 +36,646 @@ body {
 
     overflow: hidden;
 
-    background: rgba(0,0,0,0.88);
+    background: #111;
+}
+
+.leaflet-control-attribution {
+    font-size: 7px !important;
+    background: rgba(255,255,255,.55) !important;
+}
+
+.leaflet-control-zoom {
+    display: none;
+}
+
+
+/* Punkt GPS */
+
+.gps-point {
+
+    width: 18px;
+    height: 18px;
+
+    background: #ff1744;
+
+    border: 3px solid white;
+
+    border-radius: 50%;
+
+    box-sizing: border-box;
+
+    box-shadow:
+        0 0 0 4px rgba(255,23,68,.25),
+        0 2px 6px rgba(0,0,0,.7);
+
+}
+
+
+/* Strzałka */
+
+.gps-arrow {
+
+    width: 0;
+    height: 0;
+
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+
+    border-bottom: 28px solid #ff1744;
+
+    filter:
+        drop-shadow(
+            0 2px 2px rgba(0,0,0,.7)
+        );
+
+}
+
+
+/* Status */
+
+#status {
+
+    position: absolute;
+
+    left: 6px;
+    top: 6px;
+
+    z-index: 1000;
+
+    padding: 4px 7px;
+
+    border-radius: 5px;
+
+    background:
+        rgba(0,0,0,.72);
 
     color: white;
 
-    font-family: Arial, sans-serif;
-}
+    font:
+        10px Arial;
 
-#box {
-    box-sizing: border-box;
+    display: none;
 
-    width: 100%;
-    height: 100%;
-
-    padding: 14px;
-}
-
-#title {
-    color: #ff1744;
-
-    font-size: 18px;
-
-    font-weight: bold;
-
-    margin-bottom: 12px;
-}
-
-.row {
-    margin-bottom: 9px;
-
-    font-size: 14px;
-}
-
-.label {
-    color: #aaa;
-
-    font-size: 11px;
-
-    text-transform: uppercase;
-}
-
-.value {
-    color: #fff;
-
-    font-size: 15px;
-
-    font-weight: bold;
-
-    word-break: break-word;
-}
-
-#status {
-    margin-top: 12px;
-
-    padding: 8px;
-
-    border-radius: 6px;
-
-    background: #333;
-
-    color: #ffd740;
-
-    font-size: 13px;
-}
-
-.ok {
-    background: #064d27 !important;
-    color: #69f0ae !important;
-}
-
-.error {
-    background: #5b1010 !important;
-    color: #ff8a80 !important;
 }
 
 </style>
+
 </head>
 
 <body>
 
-<div id="box">
+<div id="map"></div>
 
-    <div id="title">
-        ● GPS WEB TEST
-    </div>
-
-    <div class="row">
-        <div class="label">Status</div>
-        <div
-            class="value"
-            id="statusText">
-            Sprawdzanie GPS...
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="label">Szerokość</div>
-        <div
-            class="value"
-            id="latitude">
-            --
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="label">Długość</div>
-        <div
-            class="value"
-            id="longitude">
-            --
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="label">Dokładność</div>
-        <div
-            class="value"
-            id="accuracy">
-            --
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="label">Wysokość</div>
-        <div
-            class="value"
-            id="altitude">
-            --
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="label">Prędkość</div>
-        <div
-            class="value"
-            id="speed">
-            --
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="label">Kierunek</div>
-        <div
-            class="value"
-            id="heading">
-            --
-        </div>
-    </div>
-
-    <div id="status">
-        Oczekiwanie na lokalizację...
-    </div>
-
+<div id="status">
+    GPS...
 </div>
 
 
 <script>
 
 /* ==========================================================
-   ELEMENTY
+   KONFIGURACJA
    ========================================================== */
 
-const statusText =
-    document.getElementById(
-        "statusText"
+/*
+ * W URL Web Widgetu dodamy:
+ *
+ * ?token=TWÓJ_TOKEN
+ *
+ * dzięki czemu token nie znajduje się
+ * w pliku HTML.
+ */
+
+const params =
+    new URLSearchParams(
+        window.location.search
     );
 
-const statusBox =
-    document.getElementById(
-        "status"
-    );
+const TOKEN =
+    params.get("token");
 
-const latitude =
-    document.getElementById(
-        "latitude"
-    );
 
-const longitude =
-    document.getElementById(
-        "longitude"
-    );
+/*
+ * Serwer Traccar
+ */
 
-const accuracy =
-    document.getElementById(
-        "accuracy"
-    );
+const SERVER =
+    "https://demo.traccar.org";
 
-const altitude =
-    document.getElementById(
-        "altitude"
-    );
 
-const speed =
-    document.getElementById(
-        "speed"
-    );
+/*
+ * Interwał pobierania pozycji.
+ *
+ * 2000 = 2 sekundy
+ */
 
-const heading =
-    document.getElementById(
-        "heading"
-    );
+const REFRESH =
+    2000;
 
 
 /* ==========================================================
-   STATUS
+   MAPA
    ========================================================== */
 
-function setStatus(
-    text,
-    type
-) {
-
-    statusText.textContent =
-        text;
-
-    statusBox.textContent =
-        text;
-
-    statusBox.className =
-        "";
-
-    if (type === "ok") {
-
-        statusBox.classList.add(
-            "ok"
-        );
-
-    }
-
-    if (type === "error") {
-
-        statusBox.classList.add(
-            "error"
-        );
-
-    }
-
-}
-
-
-/* ==========================================================
-   BŁĘDY GPS
-   ========================================================== */
-
-function gpsError(error) {
-
-    let message =
-        "Nieznany błąd GPS.";
-
-    switch (
-        error.code
-    ) {
-
-        case 1:
-
-            message =
-                "BRAK ZGODY NA LOKALIZACJĘ.";
-
-            break;
-
-        case 2:
-
-            message =
-                "LOKALIZACJA NIEDOSTĘPNA.";
-
-            break;
-
-        case 3:
-
-            message =
-                "PRZEKROCZONO CZAS OCZEKIWANIA.";
-
-            break;
-
-    }
-
-    setStatus(
-        message,
-        "error"
-    );
-
-}
-
-
-/* ==========================================================
-   OTRZYMANIE GPS
-   ========================================================== */
-
-function gpsSuccess(
-    position
-) {
-
-    const coords =
-        position.coords;
-
-
-    /* Szerokość */
-
-    latitude.textContent =
-        coords.latitude
-            .toFixed(6);
-
-
-    /* Długość */
-
-    longitude.textContent =
-        coords.longitude
-            .toFixed(6);
-
-
-    /* Dokładność */
-
-    if (
-        coords.accuracy !== null
-    ) {
-
-        accuracy.textContent =
-            Math.round(
-                coords.accuracy
-            ) + " m";
-
-    }
-
-
-    /* Wysokość */
-
-    if (
-        coords.altitude !== null
-    ) {
-
-        altitude.textContent =
-            coords.altitude
-                .toFixed(1)
-            + " m";
-
-    } else {
-
-        altitude.textContent =
-            "brak danych";
-
-    }
-
-
-    /* Prędkość */
-
-    if (
-        coords.speed !== null &&
-        coords.speed >= 0
-    ) {
-
-        speed.textContent =
-            (
-                coords.speed * 3.6
-            ).toFixed(1)
-            + " km/h";
-
-    } else {
-
-        speed.textContent =
-            "brak danych";
-
-    }
-
-
-    /* Kierunek */
-
-    if (
-        coords.heading !== null &&
-        !isNaN(coords.heading)
-    ) {
-
-        heading.textContent =
-            Math.round(
-                coords.heading
-            )
-            + "°";
-
-    } else {
-
-        heading.textContent =
-            "brak danych";
-
-    }
-
-
-    /* Sukces */
-
-    setStatus(
-        "GPS DZIAŁA — lokalizacja została odebrana.",
-        "ok"
-    );
-
-}
-
-
-/* ==========================================================
-   SPRAWDZENIE OBSŁUGI GEOLOCATION
-   ========================================================== */
-
-if (
-    !("geolocation" in navigator)
-) {
-
-    setStatus(
-        "TEN WEB WIDGET NIE OBSŁUGUJE GEOLOCATION.",
-        "error"
-    );
-
-} else {
-
-    setStatus(
-        "Geolocation dostępne. Pobieranie GPS...",
-        null
-    );
-
-
-    /* ======================================================
-       WATCH POSITION
-
-       Ważne:
-       używamy watchPosition(), a nie getCurrentPosition(),
-       ponieważ chcemy później przesuwać mapę na żywo.
-       ====================================================== */
-
-    navigator.geolocation.watchPosition(
-
-        gpsSuccess,
-
-        gpsError,
-
+const map =
+    L.map(
+        "map",
         {
 
-            enableHighAccuracy:
+            zoomControl:
+                false,
+
+            attributionControl:
                 true,
 
-            maximumAge:
-                1000,
+            dragging:
+                false,
 
-            timeout:
-                15000
+            scrollWheelZoom:
+                false,
+
+            doubleClickZoom:
+                false,
+
+            touchZoom:
+                false,
+
+            keyboard:
+                false
+
+        }
+    );
+
+
+/* ==========================================================
+   OPEN STREET MAP
+   ========================================================== */
+
+L.tileLayer(
+
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+
+    {
+
+        maxZoom: 19,
+
+        attribution:
+            "&copy; OpenStreetMap contributors"
+
+    }
+
+).addTo(map);
+
+
+/* ==========================================================
+   IKONA GPS
+   ========================================================== */
+
+const gpsIcon =
+    L.divIcon({
+
+        className: "",
+
+        html:
+            '<div class="gps-point"></div>',
+
+        iconSize:
+            [18,18],
+
+        iconAnchor:
+            [9,9]
+
+    });
+
+
+/* ==========================================================
+   IKONA KIERUNKU
+   ========================================================== */
+
+const arrowIcon =
+    L.divIcon({
+
+        className: "",
+
+        html:
+            '<div id="gpsArrow" class="gps-arrow"></div>',
+
+        iconSize:
+            [16,28],
+
+        iconAnchor:
+            [8,14]
+
+    });
+
+
+/* ==========================================================
+   ZMIENNE
+   ========================================================== */
+
+let marker =
+    null;
+
+let arrow =
+    null;
+
+let firstPosition =
+    true;
+
+
+/* ==========================================================
+   USTAWIENIE STATUSU
+   ========================================================== */
+
+function status(
+    text
+) {
+
+    const el =
+        document.getElementById(
+            "status"
+        );
+
+    el.textContent =
+        text;
+
+}
+
+
+/* ==========================================================
+   POBRANIE SESJI
+   ========================================================== */
+
+async function login() {
+
+    if (!TOKEN) {
+
+        status(
+            "BRAK TOKENU"
+        );
+
+        return false;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+
+                SERVER +
+                "/api/session?token=" +
+                encodeURIComponent(
+                    TOKEN
+                ),
+
+                {
+
+                    method:
+                        "GET",
+
+                    credentials:
+                        "include"
+
+                }
+
+            );
+
+
+        if (!response.ok) {
+
+            status(
+                "BŁĄD SESJI: " +
+                response.status
+            );
+
+            return false;
 
         }
 
+
+        return true;
+
+    }
+
+    catch (error) {
+
+        status(
+            "BŁĄD POŁĄCZENIA"
+        );
+
+        return false;
+
+    }
+
+}
+
+
+/* ==========================================================
+   POBRANIE POZYCJI
+   ========================================================== */
+
+async function getPosition() {
+
+    try {
+
+        const response =
+            await fetch(
+
+                SERVER +
+                "/api/positions",
+
+                {
+
+                    method:
+                        "GET",
+
+                    credentials:
+                        "include",
+
+                    cache:
+                        "no-store"
+
+                }
+
+            );
+
+
+        if (!response.ok) {
+
+            status(
+                "API: " +
+                response.status
+            );
+
+            return;
+
+        }
+
+
+        const positions =
+            await response.json();
+
+
+        if (
+            !Array.isArray(
+                positions
+            ) ||
+            positions.length === 0
+        ) {
+
+            status(
+                "BRAK POZYCJI"
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * Link udostępnia tylko jedno urządzenie,
+         * więc bierzemy pierwszą pozycję.
+         */
+
+        const p =
+            positions[0];
+
+
+        const lat =
+            Number(
+                p.latitude
+            );
+
+        const lon =
+            Number(
+                p.longitude
+            );
+
+
+        if (
+            !Number.isFinite(lat) ||
+            !Number.isFinite(lon)
+        ) {
+
+            status(
+                "BŁĘDNA POZYCJA"
+            );
+
+            return;
+
+        }
+
+
+        const position =
+            [
+                lat,
+                lon
+            ];
+
+
+        /* ================================================
+           MARKER
+           ================================================ */
+
+        if (!marker) {
+
+            marker =
+                L.marker(
+
+                    position,
+
+                    {
+
+                        icon:
+                            gpsIcon,
+
+                        interactive:
+                            false
+
+                    }
+
+                ).addTo(map);
+
+        }
+        else {
+
+            marker.setLatLng(
+                position
+            );
+
+        }
+
+
+        /* ================================================
+           KIERUNEK
+           ================================================ */
+
+        const course =
+            Number(
+                p.course
+            );
+
+
+        if (
+            Number.isFinite(
+                course
+            )
+        ) {
+
+            if (!arrow) {
+
+                arrow =
+                    L.marker(
+
+                        position,
+
+                        {
+
+                            icon:
+                                arrowIcon,
+
+                            interactive:
+                                false
+
+                        }
+
+                    ).addTo(map);
+
+            }
+            else {
+
+                arrow.setLatLng(
+                    position
+                );
+
+            }
+
+
+            setTimeout(
+
+                function() {
+
+                    const el =
+                        document.getElementById(
+                            "gpsArrow"
+                        );
+
+
+                    if (el) {
+
+                        el.style.transform =
+                            "rotate(" +
+                            course +
+                            "deg)";
+
+                    }
+
+                },
+
+                0
+
+            );
+
+        }
+
+
+        /* ================================================
+           CENTROWANIE
+           ================================================ */
+
+        if (firstPosition) {
+
+            map.setView(
+
+                position,
+
+                16,
+
+                {
+
+                    animate:
+                        false
+
+                }
+
+            );
+
+            firstPosition =
+                false;
+
+        }
+        else {
+
+            map.panTo(
+
+                position,
+
+                {
+
+                    animate:
+                        false
+
+                }
+
+            );
+
+        }
+
+
+        status("");
+
+    }
+
+    catch (error) {
+
+        status(
+            "BŁĄD GPS"
+        );
+
+    }
+
+}
+
+
+/* ==========================================================
+   START
+   ========================================================== */
+
+async function start() {
+
+    status(
+        "ŁĄCZENIE..."
+    );
+
+
+    const connected =
+        await login();
+
+
+    if (!connected) {
+
+        return;
+
+    }
+
+
+    await getPosition();
+
+
+    setInterval(
+
+        getPosition,
+
+        REFRESH
+
     );
 
 }
+
+
+start();
 
 </script>
 
