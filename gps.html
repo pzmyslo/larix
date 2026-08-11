@@ -1,56 +1,1354 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
+
 <head>
+
 <meta charset="UTF-8">
 
+<meta
+    name="viewport"
+    content="width=device-width,
+             initial-scale=1.0,
+             maximum-scale=1.0,
+             user-scalable=no"
+>
+
+<title>Traccar Mini Map 2.0</title>
+
+
+<!-- =====================================================
+     LEAFLET
+     ===================================================== -->
+
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+>
+
+<script
+    src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+
 <style>
-html, body {
+
+/* =====================================================
+   CAŁE OKNO
+   ===================================================== */
+
+html,
+body {
+
     margin: 0;
+    padding: 0;
+
     width: 100%;
     height: 100%;
-    background: rgba(0,0,0,0.75);
-    color: white;
-    font-family: Arial;
+
+    overflow: hidden;
+
+    background: transparent;
+
 }
 
-#box {
-    padding: 15px;
-    font-size: 18px;
+
+/* =====================================================
+   MAPA
+   ===================================================== */
+
+#map {
+
+    position: absolute;
+
+    left: 0;
+    top: 0;
+
+    width: 100%;
+    height: 100%;
+
+    overflow: hidden;
+
+    border-radius: 14px;
+
+    border:
+        2px solid
+        rgba(255,255,255,0.45);
+
+    box-sizing: border-box;
+
+    box-shadow:
+
+        0 2px 12px
+        rgba(0,0,0,0.45);
+
 }
 
-.red {
-    color: #ff1744;
+
+/* =====================================================
+   UKRYCIE ZOOM
+   ===================================================== */
+
+.leaflet-control-zoom {
+
+    display: none !important;
+
 }
+
+
+/* =====================================================
+   ATRYBUCJA OPENSTREETMAP
+   ===================================================== */
+
+.leaflet-control-attribution {
+
+    font-size: 7px !important;
+
+    line-height: 9px !important;
+
+    padding:
+        1px 3px !important;
+
+    border-radius:
+        4px 0 0 0;
+
+    background:
+        rgba(255,255,255,0.60)
+        !important;
+
+}
+
+
+/* =====================================================
+   MAŁY PUNKT GPS
+   ===================================================== */
+
+.gps-point {
+
+    width: 12px;
+    height: 12px;
+
+    box-sizing: border-box;
+
+    border-radius: 50%;
+
+    background:
+        #ff1744;
+
+    border:
+        2px solid
+        #ffffff;
+
+    box-shadow:
+
+        0 0 0 3px
+        rgba(255,23,68,0.28),
+
+        0 1px 5px
+        rgba(0,0,0,0.75);
+
+}
+
+
+/* =====================================================
+   STRZAŁKA KIERUNKU
+   ===================================================== */
+
+.gps-arrow {
+
+    width: 0;
+    height: 0;
+
+    border-left:
+        6px solid transparent;
+
+    border-right:
+        6px solid transparent;
+
+    border-bottom:
+        20px solid #ff1744;
+
+    filter:
+
+        drop-shadow(
+            0 1px 2px
+            rgba(0,0,0,0.75)
+        );
+
+    transform-origin:
+        50% 70%;
+
+}
+
+
+/* =====================================================
+   STATUS BŁĘDU
+   ===================================================== */
+
+#status {
+
+    position: absolute;
+
+    left: 6px;
+    top: 6px;
+
+    z-index: 10000;
+
+    padding:
+        4px 7px;
+
+    border-radius: 5px;
+
+    background:
+        rgba(0,0,0,0.78);
+
+    color:
+        #ffffff;
+
+    font:
+        10px Arial,
+        sans-serif;
+
+    display: none;
+
+}
+
+
+/* =====================================================
+   DELIKATNA RAMKA WEWNĘTRZNA
+   ===================================================== */
+
+#frame {
+
+    position: absolute;
+
+    z-index: 5000;
+
+    left: 0;
+    top: 0;
+
+    width: 100%;
+    height: 100%;
+
+    pointer-events: none;
+
+    border-radius: 12px;
+
+    box-shadow:
+
+        inset 0 0 0 1px
+        rgba(255,255,255,0.18),
+
+        inset 0 0 18px
+        rgba(0,0,0,0.10);
+
+}
+
 </style>
+
 </head>
+
 
 <body>
 
-<div id="box">
 
-    <div class="red">● GPS TEST</div>
+<div id="map"></div>
 
-    <br>
+<div id="frame"></div>
 
-    POZYCJA:<br>
-    <% gps_coord(dd, 6) %>
+<div id="status"></div>
 
-    <br><br>
 
-    PRĘDKOŚĆ:<br>
-    <% gps_speed(km/h) %>
+<script>
 
-    <br><br>
+/* =====================================================
+   KONFIGURACJA
+   ===================================================== */
 
-    WYSOKOŚĆ:<br>
-    <% gps_alt(m) %> m
 
-    <br><br>
+/*
+ * Token pobieramy z URL.
+ *
+ * Przykład:
+ *
+ * traccar-mini-map-2.0.html?token=TWÓJ_TOKEN
+ */
 
-    KIERUNEK:<br>
-    <% gps_heading(tru, "d0") %>°
+const params =
+    new URLSearchParams(
+        window.location.search
+    );
 
-</div>
+
+const TOKEN =
+    params.get("token");
+
+
+/*
+ * Serwer Traccar
+ */
+
+const SERVER =
+    "https://demo.traccar.org";
+
+
+/*
+ * Odpytywanie awaryjne.
+ *
+ * Używane jeżeli WebSocket nie może
+ * zostać wykorzystany przez Web Widget.
+ */
+
+const REFRESH_TIME =
+    2000;
+
+
+/*
+ * Początkowy zoom.
+ */
+
+const MAP_ZOOM =
+    16;
+
+
+/*
+ * MAKSYMALNA DŁUGOŚĆ ŚLADU
+ *
+ * dokładnie 300 metrów.
+ */
+
+const MAX_TRAIL_METERS =
+    300;
+
+
+/*
+ * ID urządzenia.
+ *
+ * Twoje urządzenie:
+ *
+ * 76224
+ *
+ * Nie jest konieczne do zwykłego
+ * /api/positions, ale pozwala nam
+ * ignorować ewentualne inne urządzenia.
+ */
+
+const DEVICE_ID =
+    76224;
+
+
+/* =====================================================
+   MAPA
+   ===================================================== */
+
+const map =
+    L.map(
+        "map",
+        {
+
+            zoomControl:
+                false,
+
+            attributionControl:
+                true,
+
+            dragging:
+                false,
+
+            scrollWheelZoom:
+                false,
+
+            doubleClickZoom:
+                false,
+
+            touchZoom:
+                false,
+
+            boxZoom:
+                false,
+
+            keyboard:
+                false
+
+        }
+    );
+
+
+/* =====================================================
+   OPENSTREETMAP
+   ===================================================== */
+
+L.tileLayer(
+
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+
+    {
+
+        maxZoom:
+            19,
+
+        attribution:
+            "&copy; OpenStreetMap contributors"
+
+    }
+
+).addTo(map);
+
+
+/* =====================================================
+   IKONA PUNKTU
+   ===================================================== */
+
+const gpsPointIcon =
+    L.divIcon({
+
+        className:
+            "",
+
+        html:
+            '<div class="gps-point"></div>',
+
+        iconSize:
+            [12,12],
+
+        iconAnchor:
+            [6,6]
+
+    });
+
+
+/* =====================================================
+   IKONA STRZAŁKI
+   ===================================================== */
+
+const gpsArrowIcon =
+    L.divIcon({
+
+        className:
+            "",
+
+        html:
+            '<div id="directionArrow" class="gps-arrow"></div>',
+
+        iconSize:
+            [12,20],
+
+        iconAnchor:
+            [6,14]
+
+    });
+
+
+/* =====================================================
+   ZMIENNE
+   ===================================================== */
+
+let gpsMarker =
+    null;
+
+
+let directionMarker =
+    null;
+
+
+let routeLine =
+    null;
+
+
+let firstPosition =
+    true;
+
+
+let route =
+    [];
+
+
+let pollingTimer =
+    null;
+
+
+let websocket =
+    null;
+
+
+let websocketActive =
+    false;
+
+
+let lastPosition =
+    null;
+
+
+/* =====================================================
+   STATUS
+   ===================================================== */
+
+function showStatus(
+    text
+) {
+
+    const element =
+        document.getElementById(
+            "status"
+        );
+
+
+    element.textContent =
+        text;
+
+
+    element.style.display =
+        text
+            ? "block"
+            : "none";
+
+}
+
+
+/* =====================================================
+   ODLEGŁOŚĆ GPS — HAVERSINE
+   ===================================================== */
+
+function distanceMeters(
+    a,
+    b
+) {
+
+    const R =
+        6371000;
+
+
+    const lat1 =
+        a[0] *
+        Math.PI /
+        180;
+
+
+    const lat2 =
+        b[0] *
+        Math.PI /
+        180;
+
+
+    const dLat =
+        (b[0] - a[0]) *
+        Math.PI /
+        180;
+
+
+    const dLon =
+        (b[1] - a[1]) *
+        Math.PI /
+        180;
+
+
+    const x =
+        Math.sin(
+            dLat / 2
+        ) *
+        Math.sin(
+            dLat / 2
+        );
+
+
+    const y =
+        Math.sin(
+            dLon / 2
+        ) *
+        Math.sin(
+            dLon / 2
+        );
+
+
+    const value =
+        x +
+        Math.cos(lat1) *
+        Math.cos(lat2) *
+        y;
+
+
+    const c =
+        2 *
+        Math.atan2(
+            Math.sqrt(value),
+            Math.sqrt(
+                1 - value
+            )
+        );
+
+
+    return R * c;
+
+}
+
+
+/* =====================================================
+   DODAWANIE PUNKTU DO ŚLADU
+   ===================================================== */
+
+function addTrailPoint(
+    position
+) {
+
+    /*
+     * Jeżeli pozycja praktycznie się
+     * nie zmieniła, nic nie robimy.
+     */
+
+    if (
+        lastPosition
+    ) {
+
+        const moved =
+            distanceMeters(
+                lastPosition,
+                position
+            );
+
+
+        if (
+            moved < 2
+        ) {
+
+            return;
+
+        }
+
+    }
+
+
+    route.push(
+        position
+    );
+
+
+    lastPosition =
+        position;
+
+
+    /*
+     * Usuwamy najstarsze punkty,
+     * dopóki cały ślad nie mieści się
+     * w ostatnich 300 metrach.
+     */
+
+    while (
+        route.length > 1
+        &&
+        totalTrailDistance() >
+            MAX_TRAIL_METERS
+    ) {
+
+        route.shift();
+
+    }
+
+
+    drawTrail();
+
+}
+
+
+/* =====================================================
+   SUMA DŁUGOŚCI ŚLADU
+   ===================================================== */
+
+function totalTrailDistance() {
+
+    let total =
+        0;
+
+
+    for (
+        let i = 1;
+        i < route.length;
+        i++
+    ) {
+
+        total +=
+            distanceMeters(
+                route[i - 1],
+                route[i]
+            );
+
+    }
+
+
+    return total;
+
+}
+
+
+/* =====================================================
+   RYSOWANIE ŚLADU
+   ===================================================== */
+
+function drawTrail() {
+
+    if (
+        route.length < 2
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        !routeLine
+    ) {
+
+        routeLine =
+            L.polyline(
+
+                route,
+
+                {
+
+                    color:
+                        "#ff1744",
+
+                    weight:
+                        3,
+
+                    opacity:
+                        0.82,
+
+                    lineCap:
+                        "round",
+
+                    lineJoin:
+                        "round"
+
+                }
+
+            ).addTo(map);
+
+    }
+    else {
+
+        routeLine.setLatLngs(
+            route
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   AKTUALIZACJA MAPY
+   ===================================================== */
+
+function updateMap(
+    data
+) {
+
+    const latitude =
+        Number(
+            data.latitude
+        );
+
+
+    const longitude =
+        Number(
+            data.longitude
+        );
+
+
+    if (
+        !Number.isFinite(
+            latitude
+        )
+        ||
+        !Number.isFinite(
+            longitude
+        )
+    ) {
+
+        showStatus(
+            "BŁĘDNA POZYCJA"
+        );
+
+        return;
+
+    }
+
+
+    const position =
+        [
+            latitude,
+            longitude
+        ];
+
+
+    /* =================================================
+       PUNKT
+       ================================================= */
+
+    if (
+        !gpsMarker
+    ) {
+
+        gpsMarker =
+            L.marker(
+
+                position,
+
+                {
+
+                    icon:
+                        gpsPointIcon,
+
+                    interactive:
+                        false
+
+                }
+
+            ).addTo(map);
+
+    }
+    else {
+
+        gpsMarker.setLatLng(
+            position
+        );
+
+    }
+
+
+    /* =================================================
+       ŚLAD 300 METRÓW
+       ================================================= */
+
+    addTrailPoint(
+        position
+    );
+
+
+    /* =================================================
+       KIERUNEK
+       ================================================= */
+
+    const course =
+        Number(
+            data.course
+        );
+
+
+    if (
+        Number.isFinite(
+            course
+        )
+    ) {
+
+        if (
+            !directionMarker
+        ) {
+
+            directionMarker =
+                L.marker(
+
+                    position,
+
+                    {
+
+                        icon:
+                            gpsArrowIcon,
+
+                        interactive:
+                            false
+
+                    }
+
+                ).addTo(map);
+
+        }
+        else {
+
+            directionMarker.setLatLng(
+                position
+            );
+
+        }
+
+
+        const arrow =
+            document.getElementById(
+                "directionArrow"
+            );
+
+
+        if (
+            arrow
+        ) {
+
+            arrow.style.transform =
+                "rotate(" +
+                course +
+                "deg)";
+
+        }
+
+    }
+
+
+    /* =================================================
+       CENTROWANIE
+       ================================================= */
+
+    if (
+        firstPosition
+    ) {
+
+        map.setView(
+
+            position,
+
+            MAP_ZOOM,
+
+            {
+
+                animate:
+                    false
+
+            }
+
+        );
+
+
+        firstPosition =
+            false;
+
+    }
+    else {
+
+        map.panTo(
+
+            position,
+
+            {
+
+                animate:
+                    false
+
+            }
+
+        );
+
+    }
+
+
+    showStatus("");
+
+}
+
+
+/* =====================================================
+   POBIERANIE POZYCJI REST API
+   ===================================================== */
+
+async function updateGPS() {
+
+    if (
+        !TOKEN
+    ) {
+
+        showStatus(
+            "BRAK TOKENU"
+        );
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+
+                SERVER +
+                "/api/positions",
+
+                {
+
+                    method:
+                        "GET",
+
+                    cache:
+                        "no-store",
+
+                    headers:
+                        {
+
+                            "Accept":
+                                "application/json",
+
+                            "Authorization":
+                                "Bearer " +
+                                TOKEN
+
+                        }
+
+                }
+
+            );
+
+
+        if (
+            !response.ok
+        ) {
+
+            showStatus(
+                "GPS HTTP " +
+                response.status
+            );
+
+            return;
+
+        }
+
+
+        const positions =
+            await response.json();
+
+
+        if (
+            !Array.isArray(
+                positions
+            )
+            ||
+            positions.length === 0
+        ) {
+
+            showStatus(
+                "BRAK POZYCJI"
+            );
+
+            return;
+
+        }
+
+
+        /*
+         * Wybieramy nasze urządzenie.
+         */
+
+        let data =
+            positions.find(
+                p =>
+                    Number(
+                        p.deviceId
+                    ) === DEVICE_ID
+            );
+
+
+        /*
+         * Awaryjnie pierwsza pozycja.
+         */
+
+        if (
+            !data
+        ) {
+
+            data =
+                positions[0];
+
+        }
+
+
+        updateMap(
+            data
+        );
+
+    }
+    catch (
+        error
+    ) {
+
+        showStatus(
+            "BŁĄD GPS"
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   POLLING — TRYB AWARYJNY
+   ===================================================== */
+
+function startPolling() {
+
+    if (
+        pollingTimer
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+     * Pierwszy odczyt natychmiast.
+     */
+
+    updateGPS();
+
+
+    pollingTimer =
+        setInterval(
+
+            updateGPS,
+
+            REFRESH_TIME
+
+        );
+
+}
+
+
+/* =====================================================
+   WEBSOCKET
+   ===================================================== */
+
+function startWebSocket() {
+
+    /*
+     * Traccar oficjalnie wymaga cookie sesji
+     * dla WebSocket.
+     *
+     * W Web Widget Larixa nie mamy pewności,
+     * że cookie sesji będzie dostępne.
+     *
+     * Dlatego WebSocket jest próbą,
+     * a nie jedynym mechanizmem.
+     */
+
+    try {
+
+        const protocol =
+            location.protocol === "https:"
+                ? "wss:"
+                : "ws:";
+
+
+        const socketURL =
+            protocol +
+            "//demo.traccar.org/api/socket";
+
+
+        websocket =
+            new WebSocket(
+                socketURL
+            );
+
+
+        websocket.onopen =
+            function() {
+
+                websocketActive =
+                    true;
+
+
+                /*
+                 * Jeżeli WebSocket zadziałał,
+                 * nie potrzebujemy pollingu.
+                 */
+
+                if (
+                    pollingTimer
+                ) {
+
+                    clearInterval(
+                        pollingTimer
+                    );
+
+                    pollingTimer =
+                        null;
+
+                }
+
+            };
+
+
+        websocket.onmessage =
+            function(event) {
+
+                try {
+
+                    const message =
+                        JSON.parse(
+                            event.data
+                        );
+
+
+                    /*
+                     * Traccar przesyła pozycje
+                     * w tablicy positions.
+                     */
+
+                    if (
+                        Array.isArray(
+                            message.positions
+                        )
+                    ) {
+
+                        const data =
+                            message.positions.find(
+                                p =>
+                                    Number(
+                                        p.deviceId
+                                    ) ===
+                                    DEVICE_ID
+                            );
+
+
+                        if (
+                            data
+                        ) {
+
+                            updateMap(
+                                data
+                            );
+
+                        }
+
+                    }
+
+                }
+                catch (
+                    error
+                ) {
+
+                    /*
+                     * Ignorujemy niepoprawne
+                     * wiadomości.
+
+                     */
+
+                }
+
+            };
+
+
+        websocket.onerror =
+            function() {
+
+                websocketActive =
+                    false;
+
+            };
+
+
+        websocket.onclose =
+            function() {
+
+                websocketActive =
+                    false;
+
+
+                /*
+                 * Najważniejsze:
+                 *
+                 * jeżeli WebSocket nie działa,
+                 * automatycznie wracamy do REST API.
+                 */
+
+                startPolling();
+
+            };
+
+    }
+    catch (
+        error
+    ) {
+
+        websocketActive =
+            false;
+
+        startPolling();
+
+    }
+
+}
+
+
+/* =====================================================
+   START
+   ===================================================== */
+
+function start() {
+
+    if (
+        !TOKEN
+    ) {
+
+        showStatus(
+            "BRAK TOKENU"
+        );
+
+        return;
+
+    }
+
+
+    /*
+     * Najpierw zwykły REST API.
+     *
+     * Dzięki temu mapa pojawi się od razu.
+     */
+
+    updateGPS();
+
+
+    /*
+     * Uruchamiamy WebSocket.
+     *
+     * Jeżeli Larix go nie dopuści,
+     * automatycznie przechodzimy na polling.
+     */
+
+    startWebSocket();
+
+
+    /*
+     * Bezpieczny fallback:
+     *
+     * jeśli WebSocket przez kilka sekund
+     * nie zadziała, włączamy REST API.
+     */
+
+    setTimeout(
+
+        function() {
+
+            if (
+                !websocketActive
+            ) {
+
+                startPolling();
+
+            }
+
+        },
+
+        5000
+
+    );
+
+}
+
+
+/* =====================================================
+   START
+   ===================================================== */
+
+start();
+
+</script>
 
 </body>
+
 </html>
