@@ -13,7 +13,7 @@
              user-scalable=no"
 >
 
-<title>GPS Mini Map</title>
+<title>Traccar GPS Map</title>
 
 
 <!-- =====================================================
@@ -33,7 +33,7 @@
 <style>
 
 /* =====================================================
-   CAŁY WIDGET
+   PEŁNY EKRAN
    ===================================================== */
 
 html,
@@ -68,7 +68,7 @@ body,
 
 
 /* =====================================================
-   USUNIĘCIE PRZYCISKÓW ZOOM
+   USUWAMY ZOOM
    ===================================================== */
 
 .leaflet-control-zoom {
@@ -79,17 +79,19 @@ body,
 
 
 /* =====================================================
-   ATRYBUCJA OSM
+   ATRYBUCJA OPENSTREETMAP
    ===================================================== */
 
 .leaflet-control-attribution {
 
     font-size: 7px !important;
 
-    line-height: 10px !important;
+    line-height: 9px !important;
+
+    padding: 1px 3px !important;
 
     background:
-        rgba(255,255,255,0.65)
+        rgba(255,255,255,0.60)
         !important;
 
 }
@@ -110,7 +112,7 @@ body,
 
     background: #ff1744;
 
-    border: 3px solid white;
+    border: 3px solid #ffffff;
 
     box-shadow:
 
@@ -150,7 +152,7 @@ body,
 
 
 /* =====================================================
-   STATUS — POKAZUJE SIĘ TYLKO PRZY BŁĘDZIE
+   STATUS BŁĘDU
    ===================================================== */
 
 #status {
@@ -160,7 +162,7 @@ body,
     left: 5px;
     top: 5px;
 
-    z-index: 1000;
+    z-index: 10000;
 
     padding:
         4px 7px;
@@ -168,12 +170,13 @@ body,
     border-radius: 5px;
 
     background:
-        rgba(0,0,0,0.75);
+        rgba(0,0,0,0.78);
 
     color: white;
 
     font:
-        10px Arial;
+        10px Arial,
+        sans-serif;
 
     display: none;
 
@@ -200,21 +203,24 @@ body,
 
 
 /*
- * Token NIE jest zapisany w pliku.
+ * TOKEN JEST POBIERANY Z ADRESU STRONY.
  *
- * Dodajemy go do URL:
+ * PRZYKŁAD:
  *
- * traccar-mini-map.html?token=XXXXX
+ * traccar-mini-map.html?token=TWÓJ_TOKEN
+ *
+ * Dzięki temu nie trzeba wpisywać tokenu
+ * bezpośrednio do tego pliku.
  */
 
-const urlParams =
+const params =
     new URLSearchParams(
         window.location.search
     );
 
 
 const TOKEN =
-    urlParams.get("token");
+    params.get("token");
 
 
 /*
@@ -226,9 +232,9 @@ const SERVER =
 
 
 /*
- * Odświeżanie GPS.
+ * Częstotliwość pobierania GPS.
  *
- * 2000 = 2 sekundy
+ * 2000 ms = 2 sekundy
  */
 
 const REFRESH_TIME =
@@ -236,7 +242,7 @@ const REFRESH_TIME =
 
 
 /*
- * Powiększenie mapy.
+ * Początkowe powiększenie mapy.
  */
 
 const MAP_ZOOM =
@@ -245,6 +251,8 @@ const MAP_ZOOM =
 
 /*
  * Maksymalna liczba punktów śladu.
+ *
+ * 300 punktów.
  */
 
 const MAX_ROUTE_POINTS =
@@ -302,10 +310,7 @@ L.tileLayer(
             19,
 
         attribution:
-            "&copy; OpenStreetMap contributors",
-
-        crossOrigin:
-            true
+            "&copy; OpenStreetMap contributors"
 
     }
 
@@ -313,7 +318,7 @@ L.tileLayer(
 
 
 /* =====================================================
-   IKONA PUNKTU
+   IKONA CZERWONEGO PUNKTU
    ===================================================== */
 
 const gpsPointIcon =
@@ -381,44 +386,6 @@ let route =
 
 
 /* =====================================================
-   ODCZYT ZAPISANEJ TRASY
-   ===================================================== */
-
-try {
-
-    const saved =
-        sessionStorage.getItem(
-            "traccar_route"
-        );
-
-
-    if (saved) {
-
-        const parsed =
-            JSON.parse(saved);
-
-
-        if (
-            Array.isArray(parsed)
-        ) {
-
-            route =
-                parsed;
-
-        }
-
-    }
-
-}
-catch (e) {
-
-    route =
-        [];
-
-}
-
-
-/* =====================================================
    STATUS
    ===================================================== */
 
@@ -426,17 +393,17 @@ function showStatus(
     text
 ) {
 
-    const el =
+    const element =
         document.getElementById(
             "status"
         );
 
 
-    el.textContent =
+    element.textContent =
         text;
 
 
-    el.style.display =
+    element.style.display =
         text
             ? "block"
             : "none";
@@ -445,103 +412,23 @@ function showStatus(
 
 
 /* =====================================================
-   LOGOWANIE DO TRACCARA
-   ===================================================== */
-
-async function createSession() {
-
-    if (!TOKEN) {
-
-        showStatus(
-            "BRAK TOKENU"
-        );
-
-        return false;
-
-    }
-
-
-    try {
-
-        const response =
-            await fetch(
-
-                SERVER +
-                "/api/session?token=" +
-                encodeURIComponent(
-                    TOKEN
-                ),
-
-                {
-
-                    method:
-                        "GET",
-
-                    credentials:
-                        "include",
-
-                    cache:
-                        "no-store",
-
-                    headers:
-                        {
-
-                            "Accept":
-                                "application/json"
-
-                        }
-
-                }
-
-            );
-
-
-        if (
-            !response.ok
-        ) {
-
-            showStatus(
-                "TRACCAR " +
-                response.status
-            );
-
-            return false;
-
-        }
-
-
-        /*
-         * Odczytujemy odpowiedź,
-         * żeby sesja została poprawnie
-         * ustanowiona.
-         */
-
-        await response.json();
-
-
-        return true;
-
-    }
-    catch (error) {
-
-        showStatus(
-            "BŁĄD POŁĄCZENIA"
-        );
-
-        return false;
-
-    }
-
-}
-
-
-/* =====================================================
-   POBIERANIE POZYCJI
+   POBIERANIE GPS Z TRACCAR
    ===================================================== */
 
 async function updateGPS() {
 
     try {
+
+        /*
+         * WAŻNE:
+         *
+         * Nie korzystamy z /api/session.
+         *
+         * Nie korzystamy z cookie.
+         *
+         * Token jest przekazywany bezpośrednio
+         * jako Bearer token.
+         */
 
         const response =
             await fetch(
@@ -554,9 +441,6 @@ async function updateGPS() {
                     method:
                         "GET",
 
-                    credentials:
-                        "include",
-
                     cache:
                         "no-store",
 
@@ -564,7 +448,11 @@ async function updateGPS() {
                         {
 
                             "Accept":
-                                "application/json"
+                                "application/json",
+
+                            "Authorization":
+                                "Bearer " +
+                                TOKEN
 
                         }
 
@@ -572,6 +460,10 @@ async function updateGPS() {
 
             );
 
+
+        /* =============================================
+           BŁĄD HTTP
+           ============================================= */
 
         if (
             !response.ok
@@ -586,6 +478,10 @@ async function updateGPS() {
 
         }
 
+
+        /* =============================================
+           JSON
+           ============================================= */
 
         const positions =
             await response.json();
@@ -609,31 +505,38 @@ async function updateGPS() {
 
 
         /*
-         * Udostępnione konto ma tylko jedno
-         * urządzenie, więc pierwsza pozycja
-         * jest naszą pozycją GPS.
+         * Twoje konto udostępnia tylko jedno urządzenie,
+         * więc używamy pierwszej pozycji.
          */
 
-        const positionData =
+        const data =
             positions[0];
 
 
-        const lat =
+        const latitude =
             Number(
-                positionData.latitude
+                data.latitude
             );
 
 
-        const lon =
+        const longitude =
             Number(
-                positionData.longitude
+                data.longitude
             );
 
+
+        /* =============================================
+           SPRAWDZENIE WSPÓŁRZĘDNYCH
+           ============================================= */
 
         if (
-            !Number.isFinite(lat)
+            !Number.isFinite(
+                latitude
+            )
             ||
-            !Number.isFinite(lon)
+            !Number.isFinite(
+                longitude
+            )
         ) {
 
             showStatus(
@@ -647,13 +550,13 @@ async function updateGPS() {
 
         const position =
             [
-                lat,
-                lon
+                latitude,
+                longitude
             ];
 
 
         /* =============================================
-           MARKER GPS
+           CZERWONY PUNKT
            ============================================= */
 
         if (
@@ -688,7 +591,7 @@ async function updateGPS() {
 
 
         /* =============================================
-           TRASA
+           ŚLAD PRZEJAZDU
            ============================================= */
 
         let addPoint =
@@ -705,29 +608,31 @@ async function updateGPS() {
                 ];
 
 
-            /*
-             * Nie dodawaj punktu,
-             * jeśli praktycznie się nie zmienił.
-             */
-
-            const latDiff =
+            const latDifference =
                 Math.abs(
-                    lat -
+                    latitude -
                     last[0]
                 );
 
 
-            const lonDiff =
+            const lonDifference =
                 Math.abs(
-                    lon -
+                    longitude -
                     last[1]
                 );
 
 
+            /*
+             * Jeżeli punkt praktycznie się
+             * nie zmienił, nie dodajemy go.
+             */
+
             if (
-                latDiff < 0.000005
+                latDifference <
+                    0.000005
                 &&
-                lonDiff < 0.000005
+                lonDifference <
+                    0.000005
             ) {
 
                 addPoint =
@@ -738,12 +643,18 @@ async function updateGPS() {
         }
 
 
-        if (addPoint) {
+        if (
+            addPoint
+        ) {
 
             route.push(
                 position
             );
 
+
+            /*
+             * Ograniczenie długości śladu.
+             */
 
             if (
                 route.length >
@@ -753,22 +664,6 @@ async function updateGPS() {
                 route.shift();
 
             }
-
-
-            try {
-
-                sessionStorage.setItem(
-
-                    "traccar_route",
-
-                    JSON.stringify(
-                        route
-                    )
-
-                );
-
-            }
-            catch (e) {}
 
         }
 
@@ -824,17 +719,19 @@ async function updateGPS() {
 
 
         /* =============================================
-           KIERUNEK
+           KIERUNEK JAZDY
            ============================================= */
 
         const course =
             Number(
-                positionData.course
+                data.course
             );
 
 
         if (
-            Number.isFinite(course)
+            Number.isFinite(
+                course
+            )
         ) {
 
             if (
@@ -869,10 +766,12 @@ async function updateGPS() {
 
 
             /*
-             * Początkowo strzałka wskazuje północ.
-             * Obrót 90° = wschód,
-             * 180° = południe,
-             * 270° = zachód.
+             * Obracamy strzałkę.
+             *
+             * 0   = północ
+             * 90  = wschód
+             * 180 = południe
+             * 270 = zachód
              */
 
             const arrow =
@@ -881,7 +780,9 @@ async function updateGPS() {
                 );
 
 
-            if (arrow) {
+            if (
+                arrow
+            ) {
 
                 arrow.style.transform =
                     "rotate(" +
@@ -894,7 +795,7 @@ async function updateGPS() {
 
 
         /* =============================================
-           CENTROWANIE
+           AUTOMATYCZNE CENTROWANIE
            ============================================= */
 
         if (
@@ -939,10 +840,16 @@ async function updateGPS() {
         }
 
 
+        /*
+         * Wszystko OK.
+         */
+
         showStatus("");
 
     }
-    catch (error) {
+    catch (
+        error
+    ) {
 
         showStatus(
             "BŁĄD GPS"
@@ -957,26 +864,35 @@ async function updateGPS() {
    START
    ===================================================== */
 
-async function start() {
+function start() {
 
-    showStatus(
-        "ŁĄCZENIE..."
-    );
+    /*
+     * Sprawdzenie tokenu.
+     */
 
+    if (
+        !TOKEN
+    ) {
 
-    const connected =
-        await createSession();
-
-
-    if (!connected) {
+        showStatus(
+            "BRAK TOKENU"
+        );
 
         return;
 
     }
 
 
-    await updateGPS();
+    /*
+     * Pierwszy odczyt natychmiast.
+     */
 
+    updateGPS();
+
+
+    /*
+     * Kolejne odczyty co 2 sekundy.
+     */
 
     setInterval(
 
@@ -990,7 +906,7 @@ async function start() {
 
 
 /* =====================================================
-   START APLIKACJI
+   URUCHOMIENIE
    ===================================================== */
 
 start();
@@ -998,4 +914,5 @@ start();
 </script>
 
 </body>
+
 </html>
