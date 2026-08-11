@@ -3,123 +3,171 @@
 <head>
 <meta charset="UTF-8">
 
-<!-- Leaflet - mapa OpenStreetMap -->
+<meta
+  name="viewport"
+  content="width=device-width,
+           initial-scale=1.0,
+           maximum-scale=1.0,
+           user-scalable=no"
+>
+
+<title>Larix GPS Map</title>
+
+<!-- Leaflet -->
 <link
   rel="stylesheet"
-  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-/>
+  href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script
+  src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js">
+</script>
 
 <style>
+
 html,
 body {
     margin: 0;
     padding: 0;
+
     width: 100%;
     height: 100%;
+
     overflow: hidden;
+
     background: transparent;
-    font-family: Arial, Helvetica, sans-serif;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
 }
 
-/* Główne okno */
-#gpsBox {
-    position: absolute;
-    left: 0;
-    top: 0;
+/* =========================================================
+   MAPA
+   ========================================================= */
 
-    width: 100%;
-    height: 100%;
-
-    overflow: hidden;
-    background: #111;
-
-    color: white;
-}
-
-/* MAPA */
 #map {
     position: absolute;
+
     left: 0;
     top: 0;
 
     width: 100%;
     height: 100%;
+
+    background: #d8e0d4;
 
     z-index: 1;
 }
 
-/*
- * Małe przyciemnienie mapy.
- * Dzięki temu mapa jest czytelna na transmisji.
- */
-#mapShade {
+
+/* =========================================================
+   DELIKATNE PRZYCIEMNIENIE MAPY
+   ========================================================= */
+
+#shade {
     position: absolute;
-    inset: 0;
+
+    left: 0;
+    top: 0;
+
+    width: 100%;
+    height: 100%;
 
     pointer-events: none;
 
     background:
         linear-gradient(
             to bottom,
-            rgba(0,0,0,0.35),
-            rgba(0,0,0,0.00) 35%,
-            rgba(0,0,0,0.12)
+            rgba(0,0,0,0.30),
+            rgba(0,0,0,0.00) 45%,
+            rgba(0,0,0,0.20)
         );
 
     z-index: 400;
 }
 
-/* Górny pasek */
-#topBar {
+
+/* =========================================================
+   GÓRNY PANEL
+   ========================================================= */
+
+#topPanel {
+
     position: absolute;
 
     left: 8px;
     right: 8px;
     top: 8px;
 
-    min-height: 34px;
+    min-height: 32px;
 
-    padding: 6px 10px;
+    padding: 6px 9px;
 
     box-sizing: border-box;
 
-    border-radius: 9px;
+    border-radius: 8px;
 
-    background: rgba(0,0,0,0.78);
+    background:
+        rgba(0,0,0,0.78);
+
+    color: white;
 
     z-index: 500;
 
     display: flex;
+
     align-items: center;
+
     justify-content: space-between;
 
-    font-size: 13px;
+    gap: 8px;
+
+    font-size: 12px;
 }
 
-/* LIVE */
+
+/* =========================================================
+   LIVE
+   ========================================================= */
+
 #live {
-    color: #ff5252;
+
+    color: #ff1744;
+
     font-weight: bold;
+
     white-space: nowrap;
+
 }
 
-/* Lokalizacja */
+
+/* =========================================================
+   MIEJSCOWOŚĆ
+   ========================================================= */
+
 #place {
-    margin-left: 10px;
 
-    color: #eee;
+    color: #ffffff;
 
-    white-space: nowrap;
     overflow: hidden;
+
     text-overflow: ellipsis;
 
+    white-space: nowrap;
+
     text-align: right;
+
 }
 
-/* Dolny panel */
-#data {
+
+/* =========================================================
+   DOLNY PANEL
+   ========================================================= */
+
+#info {
+
     position: absolute;
 
     left: 8px;
@@ -130,44 +178,76 @@ body {
 
     box-sizing: border-box;
 
-    border-radius: 9px;
+    border-radius: 8px;
 
-    background: rgba(0,0,0,0.80);
+    background:
+        rgba(0,0,0,0.82);
+
+    color: white;
 
     z-index: 500;
 
     display: grid;
 
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns:
+        1fr 1fr;
 
-    gap: 5px 12px;
+    gap: 5px 10px;
 
-    font-size: 11px;
 }
 
-/* Pojedyncza wartość */
-.dataItem {
+
+/* =========================================================
+   ELEMENT DANYCH
+   ========================================================= */
+
+.item {
+
     min-width: 0;
+
 }
+
 
 .label {
+
     color: #aaa;
-    font-size: 9px;
+
+    font-size: 8px;
+
     text-transform: uppercase;
+
+    letter-spacing: 0.4px;
+
 }
 
+
 .value {
-    color: white;
-    font-size: 12px;
+
+    color: #fff;
+
+    font-size: 11px;
+
     font-weight: bold;
 
     white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
 }
 
-/* Marker */
-.gpsMarker {
-    width: 22px;
-    height: 22px;
+
+/* =========================================================
+   MARKER GPS
+   ========================================================= */
+
+.gpsDot {
+
+    width: 20px;
+    height: 20px;
+
+    box-sizing: border-box;
 
     border-radius: 50%;
 
@@ -175,383 +255,699 @@ body {
 
     border: 4px solid white;
 
-    box-sizing: border-box;
-
     box-shadow:
-        0 0 0 2px rgba(255,23,68,0.45),
-        0 2px 8px rgba(0,0,0,0.65);
+        0 0 0 3px
+        rgba(255,23,68,0.35),
+
+        0 2px 7px
+        rgba(0,0,0,0.65);
+
 }
 
-/* Kierunek */
-.directionArrow {
+
+/* =========================================================
+   STRZAŁKA KIERUNKU
+   ========================================================= */
+
+.arrow {
+
     width: 0;
     height: 0;
 
-    border-left: 8px solid transparent;
-    border-right: 8px solid transparent;
-    border-bottom: 25px solid #ff1744;
+    border-left:
+        8px solid transparent;
+
+    border-right:
+        8px solid transparent;
+
+    border-bottom:
+        26px solid #ff1744;
 
     filter:
-        drop-shadow(0 2px 2px rgba(0,0,0,0.7));
+        drop-shadow(
+            0 2px 2px
+            rgba(0,0,0,0.7)
+        );
 
-    transform-origin: 8px 25px;
 }
 
-/* Leaflet */
-.leaflet-control-attribution {
-    font-size: 7px !important;
-    background: rgba(255,255,255,0.65) !important;
-}
+
+/* =========================================================
+   LEAFLET
+   ========================================================= */
 
 .leaflet-control-zoom {
+
     display: none;
+
 }
+
+
+.leaflet-control-attribution {
+
+    font-size: 7px !important;
+
+    background:
+        rgba(255,255,255,0.65)
+        !important;
+
+}
+
+
+/* =========================================================
+   STATUS GPS
+   ========================================================= */
+
+#gpsStatus {
+
+    position: absolute;
+
+    left: 8px;
+    bottom: 8px;
+
+    z-index: 600;
+
+    display: none;
+
+    padding: 3px 6px;
+
+    border-radius: 5px;
+
+    background:
+        rgba(200,0,0,0.85);
+
+    color: white;
+
+    font-size: 9px;
+
+}
+
 </style>
 </head>
 
+
 <body>
 
-<div id="gpsBox">
 
-    <!-- MAPA -->
-    <div id="map"></div>
+<!-- =======================================================
+     DANE DOSTARCZANE PRZEZ LARIX
+     ======================================================= -->
 
-    <div id="mapShade"></div>
+<div id="larixData" style="display:none">
 
-    <!-- GÓRNY PANEL -->
-    <div id="topBar">
+    <span id="coord">
+        <% gps_coord(dd, 6) %>
+    </span>
 
-        <div id="live">
-            ● LIVE GPS
+    <span id="speed">
+        <% gps_speed(km/h) %>
+    </span>
+
+    <span id="altitude">
+        <% gps_alt(m) %>
+    </span>
+
+    <span id="heading">
+        <% gps_heading(tru, "d0") %>
+    </span>
+
+    <span id="place">
+        <% gps_place(locality, pl_PL) %>
+    </span>
+
+</div>
+
+
+<!-- =======================================================
+     MAPA
+     ======================================================= -->
+
+<div id="map"></div>
+
+<div id="shade"></div>
+
+
+<!-- =======================================================
+     GÓRNY PANEL
+     ======================================================= -->
+
+<div id="topPanel">
+
+    <div id="live">
+        ● LIVE GPS
+    </div>
+
+    <div id="location">
+        <span id="locationText"></span>
+    </div>
+
+</div>
+
+
+<!-- =======================================================
+     INFORMACJE GPS
+     ======================================================= -->
+
+<div id="info">
+
+    <div class="item">
+
+        <div class="label">
+            Pozycja
         </div>
 
-        <div id="place">
-            <% gps_place(locality, pl_PL) %>
+        <div
+            class="value"
+            id="coordText">
+            --
         </div>
 
     </div>
 
-    <!-- DANE GPS -->
-    <div id="data">
 
-        <div class="dataItem">
-            <div class="label">Pozycja</div>
-            <div class="value">
-                <% gps_coord(dd, 6) %>
-            </div>
+    <div class="item">
+
+        <div class="label">
+            Prędkość
         </div>
 
-        <div class="dataItem">
-            <div class="label">Prędkość</div>
-            <div class="value">
-                <% gps_speed(km/h) %>
-            </div>
+        <div
+            class="value"
+            id="speedText">
+            --
         </div>
 
-        <div class="dataItem">
-            <div class="label">Wysokość</div>
-            <div class="value">
-                <% gps_alt(m) %> m
-            </div>
+    </div>
+
+
+    <div class="item">
+
+        <div class="label">
+            Wysokość
         </div>
 
-        <div class="dataItem">
-            <div class="label">Kierunek</div>
-            <div class="value">
-                <% gps_heading(tru, "d0° r16") %>
-            </div>
+        <div
+            class="value"
+            id="altText">
+            --
+        </div>
+
+    </div>
+
+
+    <div class="item">
+
+        <div class="label">
+            Kierunek
+        </div>
+
+        <div
+            class="value"
+            id="headingText">
+            --
         </div>
 
     </div>
 
 </div>
 
+
+<div id="gpsStatus">
+    BRAK GPS
+</div>
+
+
 <script>
 
-/* ============================================================
-   ODCZYT WSPÓŁRZĘDNYCH Z LARIX
-   ============================================================ */
+/* =========================================================
+   POBRANIE DANYCH Z LARIX
+   ========================================================= */
 
-const larixCoordinates =
-    `<% gps_coord(dd, 6) %>`;
+const coordRaw =
+    document
+        .getElementById("coord")
+        .textContent
+        .trim();
+
+const speedRaw =
+    document
+        .getElementById("speed")
+        .textContent
+        .trim();
+
+const altitudeRaw =
+    document
+        .getElementById("altitude")
+        .textContent
+        .trim();
+
+const headingRaw =
+    document
+        .getElementById("heading")
+        .textContent
+        .trim();
+
+const placeRaw =
+    document
+        .getElementById("place")
+        .textContent
+        .trim();
 
 
-/*
- * Larix zwraca współrzędne w postaci podobnej do:
- *
- * 52.123456 N, 21.123456 E
- *
- * lub:
- *
- * 52.123456 N 21.123456 E
- *
- * Funkcja poniżej obsługuje oba przypadki.
- */
+/* =========================================================
+   WYŚWIETLANIE DANYCH
+   ========================================================= */
 
-function parseCoordinates(text) {
+document
+    .getElementById("coordText")
+    .textContent =
+        coordRaw || "--";
+
+
+document
+    .getElementById("speedText")
+    .textContent =
+        speedRaw || "--";
+
+
+document
+    .getElementById("altText")
+    .textContent =
+        altitudeRaw
+        ? altitudeRaw + " m"
+        : "--";
+
+
+document
+    .getElementById("headingText")
+    .textContent =
+        headingRaw
+        ? headingRaw + "°"
+        : "--";
+
+
+document
+    .getElementById("locationText")
+    .textContent =
+        placeRaw || "";
+
+
+/* =========================================================
+   PARSOWANIE GPS
+
+   Larix zwraca np.:
+
+   52.123456 N, 21.123456 E
+
+   ========================================================= */
+
+function parseGPS(text) {
 
     if (!text) {
         return null;
     }
 
-    const matches = text.match(
-        /(-?\d+(?:\.\d+)?)\s*([NS])[\s,;]+(-?\d+(?:\.\d+)?)\s*([EW])/i
-    );
 
-    if (!matches) {
+    const regex =
+        /(-?\d+(?:\.\d+)?)\s*([NS])[\s,;]+(-?\d+(?:\.\d+)?)\s*([EW])/i;
+
+
+    const match =
+        text.match(regex);
+
+
+    if (!match) {
+
+        /*
+         * Awaryjnie próbujemy znaleźć
+         * dwie liczby dziesiętne.
+         */
+
+        const numbers =
+            text.match(
+                /-?\d+(?:\.\d+)/g
+            );
+
+
+        if (
+            numbers &&
+            numbers.length >= 2
+        ) {
+
+            const lat =
+                parseFloat(numbers[0]);
+
+            const lon =
+                parseFloat(numbers[1]);
+
+
+            if (
+                Math.abs(lat) <= 90 &&
+                Math.abs(lon) <= 180
+            ) {
+
+                return {
+                    lat: lat,
+                    lon: lon
+                };
+
+            }
+
+        }
+
+
         return null;
+
     }
 
-    let lat = parseFloat(matches[1]);
-    let lon = parseFloat(matches[3]);
 
-    const latDirection = matches[2].toUpperCase();
-    const lonDirection = matches[4].toUpperCase();
+    let lat =
+        parseFloat(match[1]);
 
-    if (latDirection === "S") {
-        lat = -Math.abs(lat);
+    let lon =
+        parseFloat(match[3]);
+
+
+    const ns =
+        match[2].toUpperCase();
+
+    const ew =
+        match[4].toUpperCase();
+
+
+    if (ns === "S") {
+
+        lat =
+            -Math.abs(lat);
+
     }
 
-    if (lonDirection === "W") {
-        lon = -Math.abs(lon);
+
+    if (ew === "W") {
+
+        lon =
+            -Math.abs(lon);
+
     }
+
 
     return {
+
         lat: lat,
+
         lon: lon
+
     };
+
 }
 
 
-/* ============================================================
+/* =========================================================
    GPS
-   ============================================================ */
+   ========================================================= */
 
-const gps = parseCoordinates(larixCoordinates);
+const gps =
+    parseGPS(coordRaw);
 
 
-/* ============================================================
-   MAPA
-   ============================================================ */
-
-let map;
-
-let gpsMarker;
-let directionMarker;
-
-let routeLine;
-
+/* =========================================================
+   MAPA STARTOWA
+   ========================================================= */
 
 /*
- * Jeżeli GPS jest dostępny,
- * rozpoczynamy mapę od aktualnej pozycji.
- *
- * Jeżeli nie ma GPS, pokazujemy domyślnie środek Europy.
+ * Jeśli GPS nie jest dostępny,
+ * pokazujemy Polskę/Europę.
  */
 
 const startLat =
-    gps ? gps.lat : 52.2297;
+    gps
+    ? gps.lat
+    : 52.0;
+
 
 const startLon =
-    gps ? gps.lon : 21.0122;
+    gps
+    ? gps.lon
+    : 19.0;
 
 
-map = L.map("map", {
-    zoomControl: false,
-
-    attributionControl: true,
-
-    center: [
-        startLat,
-        startLon
-    ],
-
-    zoom: gps ? 16 : 5,
-
-    dragging: false,
-
-    scrollWheelZoom: false,
-
-    doubleClickZoom: false,
-
-    boxZoom: false,
-
-    keyboard: false,
-
-    touchZoom: false
-});
+const startZoom =
+    gps
+    ? 16
+    : 5;
 
 
-/* ============================================================
+/* =========================================================
+   INICJALIZACJA LEAFLET
+   ========================================================= */
+
+const map =
+    L.map(
+        "map",
+        {
+
+            center:
+                [
+                    startLat,
+                    startLon
+                ],
+
+            zoom:
+                startZoom,
+
+            zoomControl:
+                false,
+
+            attributionControl:
+                true,
+
+            dragging:
+                false,
+
+            scrollWheelZoom:
+                false,
+
+            doubleClickZoom:
+                false,
+
+            boxZoom:
+                false,
+
+            keyboard:
+                false,
+
+            touchZoom:
+                false
+
+        }
+    );
+
+
+/* =========================================================
    OPENSTREETMAP
-   ============================================================ */
+   ========================================================= */
 
 L.tileLayer(
+
     "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+
     {
+
         maxZoom: 19,
 
         attribution:
-            '&copy; OpenStreetMap contributors',
+            "&copy; OpenStreetMap contributors",
 
-        crossOrigin: true
+        crossOrigin:
+            true
+
     }
+
 ).addTo(map);
 
 
-/* ============================================================
-   MARKER GPS
-   ============================================================ */
+/* =========================================================
+   IKONA GPS
+   ========================================================= */
 
-const markerIcon =
-    L.divIcon({
+const gpsIcon =
+    L.divIcon(
 
-        className: "",
+        {
 
-        html:
-            '<div class="gpsMarker"></div>',
+            className:
+                "",
 
-        iconSize: [
-            22,
-            22
-        ],
+            html:
+                '<div class="gpsDot"></div>',
 
-        iconAnchor: [
-            11,
-            11
-        ]
+            iconSize:
+                [20,20],
 
-    });
+            iconAnchor:
+                [10,10]
+
+        }
+
+    );
 
 
-/* ============================================================
-   MARKER KIERUNKU
-   ============================================================ */
+/* =========================================================
+   IKONA STRZAŁKI
+   ========================================================= */
 
 const arrowIcon =
-    L.divIcon({
+    L.divIcon(
 
-        className: "",
+        {
 
-        html:
-            '<div id="directionArrow" class="directionArrow"></div>',
+            className:
+                "",
 
-        iconSize: [
-            16,
-            25
-        ],
+            html:
+                '<div id="arrowElement" class="arrow"></div>',
 
-        iconAnchor: [
-            8,
-            12
-        ]
+            iconSize:
+                [16,26],
 
-    });
+            iconAnchor:
+                [8,13]
+
+        }
+
+    );
 
 
-/* ============================================================
-   PAMIĘĆ TRASY
-   ============================================================ */
-
-let routePoints = [];
-
+/* =========================================================
+   TRASA
+   ========================================================= */
 
 /*
- * localStorage pozwala zachować ślad pomiędzy
- * odświeżeniami Web Widgetu.
+ * sessionStorage:
+ *
+ * - trasa pozostaje przy kolejnych
+ *   odświeżeniach Web Widgetu,
+ *
+ * - ale znika po zakończeniu sesji.
  */
+
+let route = [];
+
 
 try {
 
     const saved =
-        localStorage.getItem(
-            "larix_gps_route"
+        sessionStorage.getItem(
+            "larix_route"
         );
+
 
     if (saved) {
 
-        routePoints =
+        const parsed =
             JSON.parse(saved);
+
+
+        if (
+            Array.isArray(parsed)
+        ) {
+
+            route =
+                parsed;
+
+        }
 
     }
 
 } catch (e) {
 
-    routePoints = [];
+    route = [];
 
 }
 
 
-/* ============================================================
-   OGRANICZENIE DŁUGOŚCI ŚLADU
-   ============================================================ */
-
-const MAX_ROUTE_POINTS = 1000;
-
-
-/* ============================================================
-   DODANIE AKTUALNEJ POZYCJI
-   ============================================================ */
+/* =========================================================
+   DODANIE AKTUALNEGO PUNKTU
+   ========================================================= */
 
 if (gps) {
 
-    const currentPoint = [
-        gps.lat,
-        gps.lon
-    ];
+    const current =
+        [
+            gps.lat,
+            gps.lon
+        ];
 
-    /*
-     * Dodajemy punkt tylko wtedy,
-     * gdy rzeczywiście przesunęliśmy się.
-     */
 
-    let addPoint = true;
+    let shouldAdd =
+        true;
 
-    if (routePoints.length > 0) {
+
+    if (route.length > 0) {
 
         const last =
-            routePoints[
-                routePoints.length - 1
+            route[
+                route.length - 1
             ];
 
-        const distance =
-            map.distance(
-                last,
-                currentPoint
-            );
 
         /*
-         * Minimalne przesunięcie 2 m.
+         * Odległość w przybliżeniu.
+         * Nie dodajemy punktów oddalonych
+         * od poprzedniego o mniej niż 2 metry.
          */
 
+        const dLat =
+            (current[0] - last[0])
+            * 111320;
+
+
+        const dLon =
+            (current[1] - last[1])
+            * 111320
+            * Math.cos(
+                current[0] *
+                Math.PI / 180
+            );
+
+
+        const distance =
+            Math.sqrt(
+                dLat*dLat +
+                dLon*dLon
+            );
+
+
         if (distance < 2) {
-            addPoint = false;
+
+            shouldAdd =
+                false;
+
         }
 
     }
 
 
-    if (addPoint) {
+    if (shouldAdd) {
 
-        routePoints.push(
-            currentPoint
+        route.push(
+            current
         );
 
     }
 
 
     /*
-     * Nie przechowujemy nieskończonej trasy.
+     * Maksymalnie 1500 punktów.
      */
 
     if (
-        routePoints.length >
-        MAX_ROUTE_POINTS
+        route.length > 1500
     ) {
 
-        routePoints =
-            routePoints.slice(
-                -MAX_ROUTE_POINTS
+        route =
+            route.slice(
+                -1500
             );
 
     }
@@ -559,146 +955,210 @@ if (gps) {
 
     try {
 
-        localStorage.setItem(
-            "larix_gps_route",
+        sessionStorage.setItem(
+
+            "larix_route",
+
             JSON.stringify(
-                routePoints
+                route
             )
+
         );
 
-    } catch (e) {
-        /* brak localStorage - ignorujemy */
-    }
+    } catch (e) {}
+
+}
 
 
-    /* ========================================================
-       ŚLAD TRASY
-       ======================================================== */
+/* =========================================================
+   RYSOWANIE ŚLADU
+   ========================================================= */
 
-    if (routePoints.length > 1) {
+if (
+    route.length > 1
+) {
 
-        routeLine =
-            L.polyline(
-                routePoints,
-                {
-                    color: "#ff1744",
+    L.polyline(
 
-                    weight: 5,
+        route,
 
-                    opacity: 0.9,
+        {
 
-                    lineCap: "round",
+            color:
+                "#ff1744",
 
-                    lineJoin: "round"
-                }
-            ).addTo(map);
+            weight:
+                4,
 
-    }
+            opacity:
+                0.90,
+
+            lineCap:
+                "round",
+
+            lineJoin:
+                "round"
+
+        }
+
+    ).addTo(map);
+
+}
 
 
-    /* ========================================================
-       AKTUALNY PUNKT
-       ======================================================== */
+/* =========================================================
+   AKTUALNA POZYCJA
+   ========================================================= */
 
-    gpsMarker =
+let marker =
+    null;
+
+
+let directionMarker =
+    null;
+
+
+if (gps) {
+
+    const position =
+        [
+            gps.lat,
+            gps.lon
+        ];
+
+
+    marker =
         L.marker(
-            currentPoint,
-            {
-                icon: markerIcon,
 
-                interactive: false
+            position,
+
+            {
+
+                icon:
+                    gpsIcon,
+
+                interactive:
+                    false
+
             }
+
         ).addTo(map);
 
 
-    /* ========================================================
-       AUTOMATYCZNE CENTROWANIE
-       ======================================================== */
+    /*
+     * Mapa podąża za aktualną pozycją.
+     */
 
     map.setView(
-        currentPoint,
+
+        position,
+
         16,
+
         {
-            animate: false
+
+            animate:
+                false
+
         }
+
     );
 
 
-    /* ========================================================
+    /* =====================================================
        KIERUNEK
-       ======================================================== */
-
-    const headingText =
-        `<% gps_heading(tru, "d0") %>`;
-
+       ===================================================== */
 
     const headingMatch =
-        headingText.match(
-            /(-?\d+(?:\.\d+)?)/
+        headingRaw.match(
+            /-?\d+(?:\.\d+)*/
         );
 
 
-    if (headingMatch) {
+    if (
+        headingMatch
+    ) {
 
         const heading =
             parseFloat(
-                headingMatch[1]
+                headingMatch[0]
             );
 
 
-        directionMarker =
-            L.marker(
-                currentPoint,
-                {
-                    icon: arrowIcon,
+        if (
+            !isNaN(heading)
+        ) {
 
-                    interactive: false
-                }
-            ).addTo(map);
+            directionMarker =
+                L.marker(
+
+                    position,
+
+                    {
+
+                        icon:
+                            arrowIcon,
+
+                        interactive:
+                            false
+
+                    }
+
+                ).addTo(map);
 
 
-        /*
-         * Obracamy strzałkę zgodnie
-         * z kierunkiem GPS.
-         */
+            /*
+             * Strzałka jest skierowana
+             * według azymutu GPS.
+             */
 
-        setTimeout(
-            function() {
+            setTimeout(
 
-                const arrow =
-                    document.getElementById(
-                        "directionArrow"
-                    );
+                function() {
 
-                if (arrow) {
+                    const arrow =
+                        document
+                            .getElementById(
+                                "arrowElement"
+                            );
 
-                    arrow.style.transform =
-                        "rotate(" +
-                        heading +
-                        "deg)";
 
-                }
+                    if (arrow) {
 
-            },
-            50
-        );
+                        arrow.style.transform =
+                            "rotate(" +
+                            heading +
+                            "deg)";
+
+                    }
+
+                },
+
+                50
+
+            );
+
+        }
 
     }
 
 }
 
 
-/* ============================================================
-   KONTROLA ROZMIARU MAPY
-   ============================================================ */
+/* =========================================================
+   AKTUALIZACJA ROZMIARU MAPY
+   ========================================================= */
 
 setTimeout(
+
     function() {
 
         map.invalidateSize();
 
     },
-    300
+
+    500
+
 );
 
 </script>
