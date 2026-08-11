@@ -1,214 +1,999 @@
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<meta
+    name="viewport"
+    content="width=device-width,
+             initial-scale=1.0,
+             maximum-scale=1.0,
+             user-scalable=no"
+>
+
+<title>GPS Mini Map</title>
+
+
+<!-- =====================================================
+     LEAFLET
+     ===================================================== -->
+
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+>
+
+<script
+    src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
 
 <style>
-html,body {
-    margin:0;
-    width:100%;
-    min-height:100%;
-    background:#111;
-    color:white;
-    font-family:Arial,sans-serif;
+
+/* =====================================================
+   CAŁY WIDGET
+   ===================================================== */
+
+html,
+body,
+#map {
+
+    margin: 0;
+    padding: 0;
+
+    width: 100%;
+    height: 100%;
+
+    overflow: hidden;
+
+    background: #111;
+
 }
 
-#box {
-    padding:15px;
+
+/* =====================================================
+   MAPA
+   ===================================================== */
+
+#map {
+
+    position: absolute;
+
+    left: 0;
+    top: 0;
+
 }
 
-h3 {
-    color:#ff1744;
+
+/* =====================================================
+   USUNIĘCIE PRZYCISKÓW ZOOM
+   ===================================================== */
+
+.leaflet-control-zoom {
+
+    display: none !important;
+
 }
 
-pre {
-    white-space:pre-wrap;
-    word-break:break-word;
-    font-size:12px;
+
+/* =====================================================
+   ATRYBUCJA OSM
+   ===================================================== */
+
+.leaflet-control-attribution {
+
+    font-size: 7px !important;
+
+    line-height: 10px !important;
+
+    background:
+        rgba(255,255,255,0.65)
+        !important;
+
 }
+
+
+/* =====================================================
+   PUNKT GPS
+   ===================================================== */
+
+.gps-point {
+
+    width: 18px;
+    height: 18px;
+
+    box-sizing: border-box;
+
+    border-radius: 50%;
+
+    background: #ff1744;
+
+    border: 3px solid white;
+
+    box-shadow:
+
+        0 0 0 4px
+        rgba(255,23,68,0.30),
+
+        0 2px 7px
+        rgba(0,0,0,0.75);
+
+}
+
+
+/* =====================================================
+   STRZAŁKA KIERUNKU
+   ===================================================== */
+
+.gps-arrow {
+
+    width: 0;
+    height: 0;
+
+    border-left:
+        8px solid transparent;
+
+    border-right:
+        8px solid transparent;
+
+    border-bottom:
+        28px solid #ff1744;
+
+    filter:
+        drop-shadow(
+            0 2px 2px rgba(0,0,0,0.75)
+        );
+
+}
+
+
+/* =====================================================
+   STATUS — POKAZUJE SIĘ TYLKO PRZY BŁĘDZIE
+   ===================================================== */
+
+#status {
+
+    position: absolute;
+
+    left: 5px;
+    top: 5px;
+
+    z-index: 1000;
+
+    padding:
+        4px 7px;
+
+    border-radius: 5px;
+
+    background:
+        rgba(0,0,0,0.75);
+
+    color: white;
+
+    font:
+        10px Arial;
+
+    display: none;
+
+}
+
 </style>
+
 </head>
+
 
 <body>
 
-<div id="box">
 
-<h3>TRACCAR POSITION TEST</h3>
+<div id="map"></div>
 
-<div id="status">
-Łączenie...
-</div>
+<div id="status"></div>
 
-<pre id="result"></pre>
-
-</div>
 
 <script>
 
-const params =
+/* =====================================================
+   KONFIGURACJA
+   ===================================================== */
+
+
+/*
+ * Token NIE jest zapisany w pliku.
+ *
+ * Dodajemy go do URL:
+ *
+ * traccar-mini-map.html?token=XXXXX
+ */
+
+const urlParams =
     new URLSearchParams(
-        location.search
+        window.location.search
     );
 
-const token =
-    params.get("token");
 
-const status =
-    document.getElementById("status");
-
-const result =
-    document.getElementById("result");
+const TOKEN =
+    urlParams.get("token");
 
 
-async function test() {
+/*
+ * Serwer Traccar
+ */
 
-    if (!token) {
+const SERVER =
+    "https://demo.traccar.org";
 
-        status.textContent =
-            "BRAK TOKENU";
 
-        return;
+/*
+ * Odświeżanie GPS.
+ *
+ * 2000 = 2 sekundy
+ */
+
+const REFRESH_TIME =
+    2000;
+
+
+/*
+ * Powiększenie mapy.
+ */
+
+const MAP_ZOOM =
+    16;
+
+
+/*
+ * Maksymalna liczba punktów śladu.
+ */
+
+const MAX_ROUTE_POINTS =
+    300;
+
+
+/* =====================================================
+   MAPA
+   ===================================================== */
+
+const map =
+    L.map(
+        "map",
+        {
+
+            zoomControl:
+                false,
+
+            attributionControl:
+                true,
+
+            dragging:
+                false,
+
+            scrollWheelZoom:
+                false,
+
+            doubleClickZoom:
+                false,
+
+            touchZoom:
+                false,
+
+            boxZoom:
+                false,
+
+            keyboard:
+                false
+
+        }
+    );
+
+
+/* =====================================================
+   OPENSTREETMAP
+   ===================================================== */
+
+L.tileLayer(
+
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+
+    {
+
+        maxZoom:
+            19,
+
+        attribution:
+            "&copy; OpenStreetMap contributors",
+
+        crossOrigin:
+            true
 
     }
 
+).addTo(map);
+
+
+/* =====================================================
+   IKONA PUNKTU
+   ===================================================== */
+
+const gpsPointIcon =
+    L.divIcon({
+
+        className:
+            "",
+
+        html:
+            '<div class="gps-point"></div>',
+
+        iconSize:
+            [18,18],
+
+        iconAnchor:
+            [9,9]
+
+    });
+
+
+/* =====================================================
+   IKONA STRZAŁKI
+   ===================================================== */
+
+const gpsArrowIcon =
+    L.divIcon({
+
+        className:
+            "",
+
+        html:
+            '<div id="directionArrow" class="gps-arrow"></div>',
+
+        iconSize:
+            [16,28],
+
+        iconAnchor:
+            [8,14]
+
+    });
+
+
+/* =====================================================
+   ZMIENNE
+   ===================================================== */
+
+let gpsMarker =
+    null;
+
+
+let directionMarker =
+    null;
+
+
+let routeLine =
+    null;
+
+
+let firstPosition =
+    true;
+
+
+let route =
+    [];
+
+
+/* =====================================================
+   ODCZYT ZAPISANEJ TRASY
+   ===================================================== */
+
+try {
+
+    const saved =
+        sessionStorage.getItem(
+            "traccar_route"
+        );
+
+
+    if (saved) {
+
+        const parsed =
+            JSON.parse(saved);
+
+
+        if (
+            Array.isArray(parsed)
+        ) {
+
+            route =
+                parsed;
+
+        }
+
+    }
+
+}
+catch (e) {
+
+    route =
+        [];
+
+}
+
+
+/* =====================================================
+   STATUS
+   ===================================================== */
+
+function showStatus(
+    text
+) {
+
+    const el =
+        document.getElementById(
+            "status"
+        );
+
+
+    el.textContent =
+        text;
+
+
+    el.style.display =
+        text
+            ? "block"
+            : "none";
+
+}
+
+
+/* =====================================================
+   LOGOWANIE DO TRACCARA
+   ===================================================== */
+
+async function createSession() {
+
+    if (!TOKEN) {
+
+        showStatus(
+            "BRAK TOKENU"
+        );
+
+        return false;
+
+    }
+
+
     try {
 
-        /*
-         * Najpierw tworzymy sesję.
-         */
-
-        const sessionResponse =
+        const response =
             await fetch(
-                "https://demo.traccar.org/api/session?token="
-                + encodeURIComponent(token),
+
+                SERVER +
+                "/api/session?token=" +
+                encodeURIComponent(
+                    TOKEN
+                ),
 
                 {
-                    method: "GET",
-                    credentials: "include"
+
+                    method:
+                        "GET",
+
+                    credentials:
+                        "include",
+
+                    cache:
+                        "no-store",
+
+                    headers:
+                        {
+
+                            "Accept":
+                                "application/json"
+
+                        }
+
                 }
+
             );
 
 
-        if (!sessionResponse.ok) {
+        if (
+            !response.ok
+        ) {
 
-            status.textContent =
-                "SESJA HTTP: "
-                + sessionResponse.status;
+            showStatus(
+                "TRACCAR " +
+                response.status
+            );
+
+            return false;
+
+        }
+
+
+        /*
+         * Odczytujemy odpowiedź,
+         * żeby sesja została poprawnie
+         * ustanowiona.
+         */
+
+        await response.json();
+
+
+        return true;
+
+    }
+    catch (error) {
+
+        showStatus(
+            "BŁĄD POŁĄCZENIA"
+        );
+
+        return false;
+
+    }
+
+}
+
+
+/* =====================================================
+   POBIERANIE POZYCJI
+   ===================================================== */
+
+async function updateGPS() {
+
+    try {
+
+        const response =
+            await fetch(
+
+                SERVER +
+                "/api/positions",
+
+                {
+
+                    method:
+                        "GET",
+
+                    credentials:
+                        "include",
+
+                    cache:
+                        "no-store",
+
+                    headers:
+                        {
+
+                            "Accept":
+                                "application/json"
+
+                        }
+
+                }
+
+            );
+
+
+        if (
+            !response.ok
+        ) {
+
+            showStatus(
+                "GPS HTTP " +
+                response.status
+            );
 
             return;
 
         }
 
 
-        const session =
-            await sessionResponse.json();
+        const positions =
+            await response.json();
+
+
+        if (
+            !Array.isArray(
+                positions
+            )
+            ||
+            positions.length === 0
+        ) {
+
+            showStatus(
+                "BRAK POZYCJI"
+            );
+
+            return;
+
+        }
 
 
         /*
-         * Następnie pobieramy pozycję.
+         * Udostępnione konto ma tylko jedno
+         * urządzenie, więc pierwsza pozycja
+         * jest naszą pozycją GPS.
          */
 
-        const positionResponse =
-            await fetch(
-                "https://demo.traccar.org/api/positions",
+        const positionData =
+            positions[0];
 
-                {
-                    method: "GET",
-                    credentials: "include",
 
-                    headers: {
-                        "Accept":
-                            "application/json"
-                    }
-                }
+        const lat =
+            Number(
+                positionData.latitude
             );
 
 
-        status.textContent =
-            "POZYCJE HTTP: "
-            + positionResponse.status;
+        const lon =
+            Number(
+                positionData.longitude
+            );
 
 
-        const text =
-            await positionResponse.text();
+        if (
+            !Number.isFinite(lat)
+            ||
+            !Number.isFinite(lon)
+        ) {
+
+            showStatus(
+                "BŁĘDNA POZYCJA"
+            );
+
+            return;
+
+        }
 
 
-        result.textContent =
-            text;
+        const position =
+            [
+                lat,
+                lon
+            ];
 
 
-        /*
-         * Jeżeli odpowiedź jest JSON-em,
-         * pokazujemy najważniejsze dane.
-         */
+        /* =============================================
+           MARKER GPS
+           ============================================= */
 
-        try {
+        if (
+            !gpsMarker
+        ) {
 
-            const positions =
-                JSON.parse(text);
+            gpsMarker =
+                L.marker(
+
+                    position,
+
+                    {
+
+                        icon:
+                            gpsPointIcon,
+
+                        interactive:
+                            false
+
+                    }
+
+                ).addTo(map);
+
+        }
+        else {
+
+            gpsMarker.setLatLng(
+                position
+            );
+
+        }
+
+
+        /* =============================================
+           TRASA
+           ============================================= */
+
+        let addPoint =
+            true;
+
+
+        if (
+            route.length > 0
+        ) {
+
+            const last =
+                route[
+                    route.length - 1
+                ];
+
+
+            /*
+             * Nie dodawaj punktu,
+             * jeśli praktycznie się nie zmienił.
+             */
+
+            const latDiff =
+                Math.abs(
+                    lat -
+                    last[0]
+                );
+
+
+            const lonDiff =
+                Math.abs(
+                    lon -
+                    last[1]
+                );
 
 
             if (
-                Array.isArray(positions) &&
-                positions.length > 0
+                latDiff < 0.000005
+                &&
+                lonDiff < 0.000005
             ) {
 
-                const p =
-                    positions[0];
-
-
-                result.textContent +=
-                    "\n\n-------------------------\n"
-                    +
-                    "LAT: "
-                    + p.latitude
-                    + "\n"
-                    +
-                    "LON: "
-                    + p.longitude
-                    + "\n"
-                    +
-                    "SPEED: "
-                    + p.speed
-                    + "\n"
-                    +
-                    "COURSE: "
-                    + p.course
-                    + "\n"
-                    +
-                    "ALTITUDE: "
-                    + p.altitude
-                    + "\n"
-                    +
-                    "DEVICE ID: "
-                    + p.deviceId;
+                addPoint =
+                    false;
 
             }
 
         }
-        catch(e) {
 
-            /*
-             * Odpowiedź nie była JSON-em.
-             */
+
+        if (addPoint) {
+
+            route.push(
+                position
+            );
+
+
+            if (
+                route.length >
+                MAX_ROUTE_POINTS
+            ) {
+
+                route.shift();
+
+            }
+
+
+            try {
+
+                sessionStorage.setItem(
+
+                    "traccar_route",
+
+                    JSON.stringify(
+                        route
+                    )
+
+                );
+
+            }
+            catch (e) {}
 
         }
 
+
+        /* =============================================
+           RYSOWANIE ŚLADU
+           ============================================= */
+
+        if (
+            route.length > 1
+        ) {
+
+            if (
+                !routeLine
+            ) {
+
+                routeLine =
+                    L.polyline(
+
+                        route,
+
+                        {
+
+                            color:
+                                "#ff1744",
+
+                            weight:
+                                4,
+
+                            opacity:
+                                0.85,
+
+                            lineCap:
+                                "round",
+
+                            lineJoin:
+                                "round"
+
+                        }
+
+                    ).addTo(map);
+
+            }
+            else {
+
+                routeLine.setLatLngs(
+                    route
+                );
+
+            }
+
+        }
+
+
+        /* =============================================
+           KIERUNEK
+           ============================================= */
+
+        const course =
+            Number(
+                positionData.course
+            );
+
+
+        if (
+            Number.isFinite(course)
+        ) {
+
+            if (
+                !directionMarker
+            ) {
+
+                directionMarker =
+                    L.marker(
+
+                        position,
+
+                        {
+
+                            icon:
+                                gpsArrowIcon,
+
+                            interactive:
+                                false
+
+                        }
+
+                    ).addTo(map);
+
+            }
+            else {
+
+                directionMarker.setLatLng(
+                    position
+                );
+
+            }
+
+
+            /*
+             * Początkowo strzałka wskazuje północ.
+             * Obrót 90° = wschód,
+             * 180° = południe,
+             * 270° = zachód.
+             */
+
+            const arrow =
+                document.getElementById(
+                    "directionArrow"
+                );
+
+
+            if (arrow) {
+
+                arrow.style.transform =
+                    "rotate(" +
+                    course +
+                    "deg)";
+
+            }
+
+        }
+
+
+        /* =============================================
+           CENTROWANIE
+           ============================================= */
+
+        if (
+            firstPosition
+        ) {
+
+            map.setView(
+
+                position,
+
+                MAP_ZOOM,
+
+                {
+
+                    animate:
+                        false
+
+                }
+
+            );
+
+
+            firstPosition =
+                false;
+
+        }
+        else {
+
+            map.panTo(
+
+                position,
+
+                {
+
+                    animate:
+                        false
+
+                }
+
+            );
+
+        }
+
+
+        showStatus("");
+
     }
-    catch(error) {
+    catch (error) {
 
-        status.textContent =
-            "BŁĄD FETCH";
-
-        result.textContent =
-            error.toString();
+        showStatus(
+            "BŁĄD GPS"
+        );
 
     }
 
 }
 
-test();
+
+/* =====================================================
+   START
+   ===================================================== */
+
+async function start() {
+
+    showStatus(
+        "ŁĄCZENIE..."
+    );
+
+
+    const connected =
+        await createSession();
+
+
+    if (!connected) {
+
+        return;
+
+    }
+
+
+    await updateGPS();
+
+
+    setInterval(
+
+        updateGPS,
+
+        REFRESH_TIME
+
+    );
+
+}
+
+
+/* =====================================================
+   START APLIKACJI
+   ===================================================== */
+
+start();
 
 </script>
 
