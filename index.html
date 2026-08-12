@@ -1,1167 +1,207 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-<meta charset="UTF-8">
-
-<meta
-  name="viewport"
-  content="width=device-width,
-           initial-scale=1.0,
-           maximum-scale=1.0,
-           user-scalable=no"
->
-
-<title>Larix GPS Map</title>
-
-<!-- Leaflet -->
-<link
-  rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
->
-
-<script
-  src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js">
-</script>
-
-<style>
-
-html,
-body {
-    margin: 0;
-    padding: 0;
-
-    width: 100%;
-    height: 100%;
-
-    overflow: hidden;
-
-    background: transparent;
-
-    font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-}
-
-/* =========================================================
-   MAPA
-   ========================================================= */
-
-#map {
-    position: absolute;
-
-    left: 0;
-    top: 0;
-
-    width: 100%;
-    height: 100%;
-
-    background: #d8e0d4;
-
-    z-index: 1;
-}
-
-
-/* =========================================================
-   DELIKATNE PRZYCIEMNIENIE MAPY
-   ========================================================= */
-
-#shade {
-    position: absolute;
-
-    left: 0;
-    top: 0;
-
-    width: 100%;
-    height: 100%;
-
-    pointer-events: none;
-
-    background:
-        linear-gradient(
-            to bottom,
-            rgba(0,0,0,0.30),
-            rgba(0,0,0,0.00) 45%,
-            rgba(0,0,0,0.20)
-        );
-
-    z-index: 400;
-}
-
-
-/* =========================================================
-   GÓRNY PANEL
-   ========================================================= */
-
-#topPanel {
-
-    position: absolute;
-
-    left: 8px;
-    right: 8px;
-    top: 8px;
-
-    min-height: 32px;
-
-    padding: 6px 9px;
-
-    box-sizing: border-box;
-
-    border-radius: 8px;
-
-    background:
-        rgba(0,0,0,0.78);
-
-    color: white;
-
-    z-index: 500;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    gap: 8px;
-
-    font-size: 12px;
-}
-
-
-/* =========================================================
-   LIVE
-   ========================================================= */
-
-#live {
-
-    color: #ff1744;
-
-    font-weight: bold;
-
-    white-space: nowrap;
-
-}
-
-
-/* =========================================================
-   MIEJSCOWOŚĆ
-   ========================================================= */
-
-#place {
-
-    color: #ffffff;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-
-    white-space: nowrap;
-
-    text-align: right;
-
-}
-
-
-/* =========================================================
-   DOLNY PANEL
-   ========================================================= */
-
-#info {
-
-    position: absolute;
-
-    left: 8px;
-    right: 8px;
-    bottom: 8px;
-
-    padding: 8px;
-
-    box-sizing: border-box;
-
-    border-radius: 8px;
-
-    background:
-        rgba(0,0,0,0.82);
-
-    color: white;
-
-    z-index: 500;
-
-    display: grid;
-
-    grid-template-columns:
-        1fr 1fr;
-
-    gap: 5px 10px;
-
-}
-
-
-/* =========================================================
-   ELEMENT DANYCH
-   ========================================================= */
-
-.item {
-
-    min-width: 0;
-
-}
-
-
-.label {
-
-    color: #aaa;
-
-    font-size: 8px;
-
-    text-transform: uppercase;
-
-    letter-spacing: 0.4px;
-
-}
-
-
-.value {
-
-    color: #fff;
-
-    font-size: 11px;
-
-    font-weight: bold;
-
-    white-space: nowrap;
-
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-
-}
-
-
-/* =========================================================
-   MARKER GPS
-   ========================================================= */
-
-.gpsDot {
-
-    width: 20px;
-    height: 20px;
-
-    box-sizing: border-box;
-
-    border-radius: 50%;
-
-    background: #ff1744;
-
-    border: 4px solid white;
-
-    box-shadow:
-        0 0 0 3px
-        rgba(255,23,68,0.35),
-
-        0 2px 7px
-        rgba(0,0,0,0.65);
-
-}
-
-
-/* =========================================================
-   STRZAŁKA KIERUNKU
-   ========================================================= */
-
-.arrow {
-
-    width: 0;
-    height: 0;
-
-    border-left:
-        8px solid transparent;
-
-    border-right:
-        8px solid transparent;
-
-    border-bottom:
-        26px solid #ff1744;
-
-    filter:
-        drop-shadow(
-            0 2px 2px
-            rgba(0,0,0,0.7)
-        );
-
-}
-
-
-/* =========================================================
-   LEAFLET
-   ========================================================= */
-
-.leaflet-control-zoom {
-
-    display: none;
-
-}
-
-
-.leaflet-control-attribution {
-
-    font-size: 7px !important;
-
-    background:
-        rgba(255,255,255,0.65)
-        !important;
-
-}
-
-
-/* =========================================================
-   STATUS GPS
-   ========================================================= */
-
-#gpsStatus {
-
-    position: absolute;
-
-    left: 8px;
-    bottom: 8px;
-
-    z-index: 600;
-
-    display: none;
-
-    padding: 3px 6px;
-
-    border-radius: 5px;
-
-    background:
-        rgba(200,0,0,0.85);
-
-    color: white;
-
-    font-size: 9px;
-
-}
-
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Krajowa Szkoła Sądownictwa i Prokuratury | Serwis Rzeczypospolitej Polskiej</title>
+
+    <!-- Tailwind CSS do szybkiego montażu layoutu -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Dedykowany tryb wysokiego kontrastu dla WCAG */
+        .high-contrast {
+            background-color: #000000 !important;
+            color: #FFFF00 !important;
+        }
+        .high-contrast a {
+            color: #00FFFF !important;
+            text-decoration: underline !important;
+        }
+        .high-contrast button, .high-contrast .card {
+            background-color: #000000 !important;
+            border: 2px solid #FFFF00 !important;
+            color: #FFFF00 !important;
+        }
+        /* Skiplink */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #002b49;
+            color: white;
+            padding: 8px;
+            z-index: 100;
+        }
+        .skip-link:focus {
+            top: 0;
+        }
+    </style>
 </head>
+<body class="bg-gray-50 font-sans text-gray-900 transition-colors duration-200" id="body">
 
+    <!-- Skiplink dla czytników ekranu -->
+    <a href="#main-content" class="skip-link">Przejdź do treści głównej</a>
 
-<body>
-
-
-<!-- =======================================================
-     DANE DOSTARCZANE PRZEZ LARIX
-     ======================================================= -->
-
-<div id="larixData" style="display:none">
-
-    <span id="coord">
-        <% gps_coord(dd, 6) %>
-    </span>
-
-    <span id="speed">
-        <% gps_speed(km/h) %>
-    </span>
-
-    <span id="altitude">
-        <% gps_alt(m) %>
-    </span>
-
-    <span id="heading">
-        <% gps_heading(tru, "d0") %>
-    </span>
-
-    <span id="place">
-        <% gps_place(locality, pl_PL) %>
-    </span>
-
-</div>
-
-
-<!-- =======================================================
-     MAPA
-     ======================================================= -->
-
-<div id="map"></div>
-
-<div id="shade"></div>
-
-
-<!-- =======================================================
-     GÓRNY PANEL
-     ======================================================= -->
-
-<div id="topPanel">
-
-    <div id="live">
-        ● LIVE GPS
+    <!-- Górny Pasek Dostępności (WCAG) i Tożsamości Państwowej -->
+    <div class="bg-slate-900 text-white text-sm py-2 px-4 border-b border-slate-700">
+        <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
+            <div class="flex items-center space-x-2">
+                <span class="font-bold text-red-500">🇵🇱</span>
+                <span>Serwis Rzeczypospolitej Polskiej</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button onclick="toggleContrast()" class="hover:underline flex items-center gap-1" aria-label="Włącz wysoki kontrast">
+                    👁️ Wysoki kontrast
+                </button>
+                <div class="flex items-center space-x-1" aria-label="Zmiana rozmiaru czcionki">
+                    <button onclick="changeFontSize('small')" class="px-2 py-0.5 border rounded hover:bg-slate-800" aria-label="Domyślna czcionka">A</button>
+                    <button onclick="changeFontSize('large')" class="px-2 py-0.5 border rounded text-lg font-bold hover:bg-slate-800" aria-label="Powiększona czcionka">A+</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div id="location">
-        <span id="locationText"></span>
-    </div>
-
-</div>
-
-
-<!-- =======================================================
-     INFORMACJE GPS
-     ======================================================= -->
-
-<div id="info">
-
-    <div class="item">
-
-        <div class="label">
-            Pozycja
+    <!-- Nagłówek Główny i Nawigacja -->
+    <header class="bg-white shadow-md border-b-4 border-red-700">
+        <div class="max-w-7xl mx-auto px-4 py-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            <a href="index.html" class="flex items-center space-x-4" aria-label="Strona główna KSSiP">
+                <div class="w-16 h-16 bg-red-800 text-white flex items-center justify-center font-serif text-2xl font-bold rounded shadow">
+                    KSSiP
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold text-slate-900 leading-tight">
+                        Krajowa Szkoła Sądownictwa i Prokuratury
+                    </h1>
+                    <p class="text-xs md:text-sm text-gray-600">Państwowa jednostka organizacyjna podległa Ministrowi Sprawiedliwości</p>
+                </div>
+            </a>
+            <div class="text-right text-xs text-gray-500 hidden md:block">
+                <p>NIP: 7010027928 | REGON: 140669252</p>
+                <p>Biuletyn Informacji Publicznej (BIP)</p>
+            </div>
         </div>
 
-        <div
-            class="value"
-            id="coordText">
-            --
+        <!-- Menu Nawigacyjne -->
+        <nav class="bg-slate-800 text-white" aria-label="Główna nawigacja">
+            <div class="max-w-7xl mx-auto px-4 flex flex-wrap">
+                <a href="index.html" class="py-3 px-5 font-semibold bg-red-700 text-white hover:bg-red-800">Strona Główna</a>
+                <a href="o-szkole.html" class="py-3 px-5 font-semibold hover:bg-slate-700 transition">O Szkole</a>
+                <a href="aplikacje.html" class="py-3 px-5 font-semibold hover:bg-slate-700 transition">Aplikacje</a>
+                <a href="szkolenia.html" class="py-3 px-5 font-semibold hover:bg-slate-700 transition">Szkolenia</a>
+                <a href="kontakt.html" class="py-3 px-5 font-semibold hover:bg-slate-700 transition">Kontakt i BIP</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Sekcja Główna / Content -->
+    <main id="main-content" class="max-w-7xl mx-auto px-4 py-8">
+        
+        <!-- Sekcja Komunikatu Komisarza / Banner -->
+        <section class="bg-blue-900 text-white p-6 rounded-lg shadow-lg mb-8 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="space-y-2">
+                <span class="bg-red-600 text-xs uppercase font-bold px-3 py-1 rounded">Rekrutacja 2026</span>
+                <h2 class="text-2xl font-bold">Aplikacja Sędziowska i Prokuratorska</h2>
+                <p class="text-blue-100 max-w-2xl">Ogłoszenie o naborze na wstępny egzamin na aplikację sędziowską i aplikację prokuratorską. Sprawdź terminy i wymogi formalne.</p>
+            </div>
+            <a href="aplikacje.html" class="bg-white text-blue-900 font-bold px-6 py-3 rounded hover:bg-blue-50 transition text-center whitespace-nowrap">
+                Aplikuj teraz &rarr;
+            </a>
+        </section>
+
+        <!-- Szybki Dostęp / Kafle Obszarów -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <article class="card bg-white p-6 rounded-lg shadow border border-gray-200 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">Aplikacje Wykazowe</h3>
+                    <p class="text-gray-600 text-sm mb-4">Informacje dla aplikantów, harmonogramy zjazdów, praktyki oraz wyniki egzaminów sprawdzających.</p>
+                </div>
+                <a href="aplikacje.html" class="text-red-700 font-bold hover:underline">Zobacz szczegóły &rarr;</a>
+            </article>
+
+            <article class="card bg-white p-6 rounded-lg shadow border border-gray-200 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">Platforma Szkoleniowa</h3>
+                    <p class="text-gray-600 text-sm mb-4">Dostęp do e-learningu, zapisy na szkolenia ustawiczne dla sędziów, prokuratorów i pracowników sądów.</p>
+                </div>
+                <a href="szkolenia.html" class="text-red-700 font-bold hover:underline">Przejdź do szkoleń &rarr;</a>
+            </article>
+
+            <article class="card bg-white p-6 rounded-lg shadow border border-gray-200 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">Działalność Międzynarodowa</h3>
+                    <p class="text-gray-600 text-sm mb-4">Szkolenia zagraniczne, projekty EJTN, ERA oraz wymiana doświadczeń kadry orzekającej.</p>
+                </div>
+                <a href="o-szkole.html" class="text-red-700 font-bold hover:underline">Czytaj więcej &rarr;</a>
+            </article>
+        </section>
+
+        <!-- Najnowsze Aktualności -->
+        <section class="mb-12">
+            <h2 class="text-2xl font-bold text-slate-900 mb-6 pb-2 border-b-2 border-slate-300">Aktualności</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <article class="bg-white p-5 rounded shadow border-l-4 border-red-700">
+                    <time class="text-xs text-gray-500 font-semibold">10 SIERPNIA 2026</time>
+                    <h3 class="text-lg font-bold text-slate-900 my-1">
+                        <a href="#" class="hover:underline">Wyniki egzaminu sędziowskiego – sesja letnia 2026</a>
+                    </h3>
+                    <p class="text-gray-600 text-sm">Dyrektor Krajowej Szkoły Sądownictwa i Prokuratury ogłasza oficjalne listy osób, które uzyskały wynik pozytywny...</p>
+                </article>
+
+                <article class="bg-white p-5 rounded shadow border-l-4 border-slate-700">
+                    <time class="text-xs text-gray-500 font-semibold">04 SIERPNIA 2026</time>
+                    <h3 class="text-lg font-bold text-slate-900 my-1">
+                        <a href="#" class="hover:underline">Harmonogram szkoleń z prawa cyfrowe i sztucznej inteligencji</a>
+                    </h3>
+                    <p class="text-gray-600 text-sm">Uruchomiono zapisy na cykl warsztatów poświęconych dowodom cyfrowym w postępowaniu karnym i cywilnym...</p>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <!-- Stopka Zgodna ze Standardami Państwowymi -->
+    <footer class="bg-slate-900 text-gray-300 pt-10 pb-6 border-t-4 border-red-700">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div>
+                <h4 class="text-white font-bold text-lg mb-3">Krajowa Szkoła Sądownictwa i Prokuratury</h4>
+                <p class="text-sm text-gray-400">ul. Przyrondzie 2, 31-547 Kraków</p>
+                <p class="text-sm text-gray-400">Tel.: +48 12 617 96 00</p>
+                <p class="text-sm text-gray-400">E-mail: kancelaria@kssip.gov.pl</p>
+            </div>
+            <div>
+                <h4 class="text-white font-bold text-lg mb-3">Informacje i Dostępność</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="#" class="hover:underline">Deklaracja Dostępności WCAG 2.1</a></li>
+                    <li><a href="#" class="hover:underline">Polityka Prywatności i RODO</a></li>
+                    <li><a href="kontakt.html" class="hover:underline">Biuletyn Informacji Publicznej (BIP)</a></li>
+                    <li><a href="#" class="hover:underline">E-Doręczenia (AE:PL-88912)</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-white font-bold text-lg mb-3">Szybkie Linki</h4>
+                <ul class="space-y-2 text-sm">
+                    <li><a href="http://www.gov.pl/sprawiedliwosc" target="_blank" rel="noopener" class="hover:underline">Ministerstwo Sprawiedliwości</a></li>
+                    <li><a href="#" class="hover:underline">E-Wokanda</a></li>
+                    <li><a href="#" class="hover:underline">WKP – Wirtualna Klasa Prawnicza</a></li>
+                </ul>
+            </div>
         </div>
-
-    </div>
-
-
-    <div class="item">
-
-        <div class="label">
-            Prędkość
+        <div class="max-w-7xl mx-auto px-4 pt-6 border-t border-slate-800 text-center text-xs text-gray-500">
+            <p>&copy; 2026 Krajowa Szkoła Sądownictwa i Prokuratury. Wszelkie prawa zastrzeżone.</p>
         </div>
+    </footer>
 
-        <div
-            class="value"
-            id="speedText">
-            --
-        </div>
-
-    </div>
-
-
-    <div class="item">
-
-        <div class="label">
-            Wysokość
-        </div>
-
-        <div
-            class="value"
-            id="altText">
-            --
-        </div>
-
-    </div>
-
-
-    <div class="item">
-
-        <div class="label">
-            Kierunek
-        </div>
-
-        <div
-            class="value"
-            id="headingText">
-            --
-        </div>
-
-    </div>
-
-</div>
-
-
-<div id="gpsStatus">
-    BRAK GPS
-</div>
-
-
-<script>
-
-/* =========================================================
-   POBRANIE DANYCH Z LARIX
-   ========================================================= */
-
-const coordRaw =
-    document
-        .getElementById("coord")
-        .textContent
-        .trim();
-
-const speedRaw =
-    document
-        .getElementById("speed")
-        .textContent
-        .trim();
-
-const altitudeRaw =
-    document
-        .getElementById("altitude")
-        .textContent
-        .trim();
-
-const headingRaw =
-    document
-        .getElementById("heading")
-        .textContent
-        .trim();
-
-const placeRaw =
-    document
-        .getElementById("place")
-        .textContent
-        .trim();
-
-
-/* =========================================================
-   WYŚWIETLANIE DANYCH
-   ========================================================= */
-
-document
-    .getElementById("coordText")
-    .textContent =
-        coordRaw || "--";
-
-
-document
-    .getElementById("speedText")
-    .textContent =
-        speedRaw || "--";
-
-
-document
-    .getElementById("altText")
-    .textContent =
-        altitudeRaw
-        ? altitudeRaw + " m"
-        : "--";
-
-
-document
-    .getElementById("headingText")
-    .textContent =
-        headingRaw
-        ? headingRaw + "°"
-        : "--";
-
-
-document
-    .getElementById("locationText")
-    .textContent =
-        placeRaw || "";
-
-
-/* =========================================================
-   PARSOWANIE GPS
-
-   Larix zwraca np.:
-
-   52.123456 N, 21.123456 E
-
-   ========================================================= */
-
-function parseGPS(text) {
-
-    if (!text) {
-        return null;
-    }
-
-
-    const regex =
-        /(-?\d+(?:\.\d+)?)\s*([NS])[\s,;]+(-?\d+(?:\.\d+)?)\s*([EW])/i;
-
-
-    const match =
-        text.match(regex);
-
-
-    if (!match) {
-
-        /*
-         * Awaryjnie próbujemy znaleźć
-         * dwie liczby dziesiętne.
-         */
-
-        const numbers =
-            text.match(
-                /-?\d+(?:\.\d+)/g
-            );
-
-
-        if (
-            numbers &&
-            numbers.length >= 2
-        ) {
-
-            const lat =
-                parseFloat(numbers[0]);
-
-            const lon =
-                parseFloat(numbers[1]);
-
-
-            if (
-                Math.abs(lat) <= 90 &&
-                Math.abs(lon) <= 180
-            ) {
-
-                return {
-                    lat: lat,
-                    lon: lon
-                };
-
+    <!-- Skrypt Dostępności WCAG -->
+    <script>
+        function toggleContrast() {
+            document.body.classList.toggle('high-contrast');
+        }
+        function changeFontSize(size) {
+            if(size === 'large') {
+                document.body.style.fontSize = '1.15rem';
+            } else {
+                document.body.style.fontSize = '1rem';
             }
-
         }
-
-
-        return null;
-
-    }
-
-
-    let lat =
-        parseFloat(match[1]);
-
-    let lon =
-        parseFloat(match[3]);
-
-
-    const ns =
-        match[2].toUpperCase();
-
-    const ew =
-        match[4].toUpperCase();
-
-
-    if (ns === "S") {
-
-        lat =
-            -Math.abs(lat);
-
-    }
-
-
-    if (ew === "W") {
-
-        lon =
-            -Math.abs(lon);
-
-    }
-
-
-    return {
-
-        lat: lat,
-
-        lon: lon
-
-    };
-
-}
-
-
-/* =========================================================
-   GPS
-   ========================================================= */
-
-const gps =
-    parseGPS(coordRaw);
-
-
-/* =========================================================
-   MAPA STARTOWA
-   ========================================================= */
-
-/*
- * Jeśli GPS nie jest dostępny,
- * pokazujemy Polskę/Europę.
- */
-
-const startLat =
-    gps
-    ? gps.lat
-    : 52.0;
-
-
-const startLon =
-    gps
-    ? gps.lon
-    : 19.0;
-
-
-const startZoom =
-    gps
-    ? 16
-    : 5;
-
-
-/* =========================================================
-   INICJALIZACJA LEAFLET
-   ========================================================= */
-
-const map =
-    L.map(
-        "map",
-        {
-
-            center:
-                [
-                    startLat,
-                    startLon
-                ],
-
-            zoom:
-                startZoom,
-
-            zoomControl:
-                false,
-
-            attributionControl:
-                true,
-
-            dragging:
-                false,
-
-            scrollWheelZoom:
-                false,
-
-            doubleClickZoom:
-                false,
-
-            boxZoom:
-                false,
-
-            keyboard:
-                false,
-
-            touchZoom:
-                false
-
-        }
-    );
-
-
-/* =========================================================
-   OPENSTREETMAP
-   ========================================================= */
-
-L.tileLayer(
-
-    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-
-    {
-
-        maxZoom: 19,
-
-        attribution:
-            "&copy; OpenStreetMap contributors",
-
-        crossOrigin:
-            true
-
-    }
-
-).addTo(map);
-
-
-/* =========================================================
-   IKONA GPS
-   ========================================================= */
-
-const gpsIcon =
-    L.divIcon(
-
-        {
-
-            className:
-                "",
-
-            html:
-                '<div class="gpsDot"></div>',
-
-            iconSize:
-                [20,20],
-
-            iconAnchor:
-                [10,10]
-
-        }
-
-    );
-
-
-/* =========================================================
-   IKONA STRZAŁKI
-   ========================================================= */
-
-const arrowIcon =
-    L.divIcon(
-
-        {
-
-            className:
-                "",
-
-            html:
-                '<div id="arrowElement" class="arrow"></div>',
-
-            iconSize:
-                [16,26],
-
-            iconAnchor:
-                [8,13]
-
-        }
-
-    );
-
-
-/* =========================================================
-   TRASA
-   ========================================================= */
-
-/*
- * sessionStorage:
- *
- * - trasa pozostaje przy kolejnych
- *   odświeżeniach Web Widgetu,
- *
- * - ale znika po zakończeniu sesji.
- */
-
-let route = [];
-
-
-try {
-
-    const saved =
-        sessionStorage.getItem(
-            "larix_route"
-        );
-
-
-    if (saved) {
-
-        const parsed =
-            JSON.parse(saved);
-
-
-        if (
-            Array.isArray(parsed)
-        ) {
-
-            route =
-                parsed;
-
-        }
-
-    }
-
-} catch (e) {
-
-    route = [];
-
-}
-
-
-/* =========================================================
-   DODANIE AKTUALNEGO PUNKTU
-   ========================================================= */
-
-if (gps) {
-
-    const current =
-        [
-            gps.lat,
-            gps.lon
-        ];
-
-
-    let shouldAdd =
-        true;
-
-
-    if (route.length > 0) {
-
-        const last =
-            route[
-                route.length - 1
-            ];
-
-
-        /*
-         * Odległość w przybliżeniu.
-         * Nie dodajemy punktów oddalonych
-         * od poprzedniego o mniej niż 2 metry.
-         */
-
-        const dLat =
-            (current[0] - last[0])
-            * 111320;
-
-
-        const dLon =
-            (current[1] - last[1])
-            * 111320
-            * Math.cos(
-                current[0] *
-                Math.PI / 180
-            );
-
-
-        const distance =
-            Math.sqrt(
-                dLat*dLat +
-                dLon*dLon
-            );
-
-
-        if (distance < 2) {
-
-            shouldAdd =
-                false;
-
-        }
-
-    }
-
-
-    if (shouldAdd) {
-
-        route.push(
-            current
-        );
-
-    }
-
-
-    /*
-     * Maksymalnie 1500 punktów.
-     */
-
-    if (
-        route.length > 1500
-    ) {
-
-        route =
-            route.slice(
-                -1500
-            );
-
-    }
-
-
-    try {
-
-        sessionStorage.setItem(
-
-            "larix_route",
-
-            JSON.stringify(
-                route
-            )
-
-        );
-
-    } catch (e) {}
-
-}
-
-
-/* =========================================================
-   RYSOWANIE ŚLADU
-   ========================================================= */
-
-if (
-    route.length > 1
-) {
-
-    L.polyline(
-
-        route,
-
-        {
-
-            color:
-                "#ff1744",
-
-            weight:
-                4,
-
-            opacity:
-                0.90,
-
-            lineCap:
-                "round",
-
-            lineJoin:
-                "round"
-
-        }
-
-    ).addTo(map);
-
-}
-
-
-/* =========================================================
-   AKTUALNA POZYCJA
-   ========================================================= */
-
-let marker =
-    null;
-
-
-let directionMarker =
-    null;
-
-
-if (gps) {
-
-    const position =
-        [
-            gps.lat,
-            gps.lon
-        ];
-
-
-    marker =
-        L.marker(
-
-            position,
-
-            {
-
-                icon:
-                    gpsIcon,
-
-                interactive:
-                    false
-
-            }
-
-        ).addTo(map);
-
-
-    /*
-     * Mapa podąża za aktualną pozycją.
-     */
-
-    map.setView(
-
-        position,
-
-        16,
-
-        {
-
-            animate:
-                false
-
-        }
-
-    );
-
-
-    /* =====================================================
-       KIERUNEK
-       ===================================================== */
-
-    const headingMatch =
-        headingRaw.match(
-            /-?\d+(?:\.\d+)*/
-        );
-
-
-    if (
-        headingMatch
-    ) {
-
-        const heading =
-            parseFloat(
-                headingMatch[0]
-            );
-
-
-        if (
-            !isNaN(heading)
-        ) {
-
-            directionMarker =
-                L.marker(
-
-                    position,
-
-                    {
-
-                        icon:
-                            arrowIcon,
-
-                        interactive:
-                            false
-
-                    }
-
-                ).addTo(map);
-
-
-            /*
-             * Strzałka jest skierowana
-             * według azymutu GPS.
-             */
-
-            setTimeout(
-
-                function() {
-
-                    const arrow =
-                        document
-                            .getElementById(
-                                "arrowElement"
-                            );
-
-
-                    if (arrow) {
-
-                        arrow.style.transform =
-                            "rotate(" +
-                            heading +
-                            "deg)";
-
-                    }
-
-                },
-
-                50
-
-            );
-
-        }
-
-    }
-
-}
-
-
-/* =========================================================
-   AKTUALIZACJA ROZMIARU MAPY
-   ========================================================= */
-
-setTimeout(
-
-    function() {
-
-        map.invalidateSize();
-
-    },
-
-    500
-
-);
-
-</script>
-
+    </script>
 </body>
 </html>
