@@ -3,383 +3,273 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wyróżnieni Absolwenci | Krajowa Szkoła Sądownictwa i Prokuratury</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>Wyróżnienia i Nagrody | E-KSSiP</title>
     <style>
-        :root {
-            --primary-color: #0b2545;
-            --accent-color: #c5a059;
-            --text-dark: #333333;
-            --bg-light: #f8f9fa;
-            --white: #ffffff;
-            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        * {
+        /* Styl ogólny */
+        body {
+            font-family: 'Georgia', serif;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            color: var(--text-dark);
-            background-color: var(--bg-light);
+            color: #333;
             line-height: 1.6;
-            overflow-x: hidden;
+            background-color: #ffffff;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-weight: normal;
         }
 
-        /* Nagłówek z efektem powiększenia logo */
+        /* Nawigacja (Header) */
         header {
-            background-color: var(--primary-color);
-            color: var(--white);
-            padding: 1.5rem 5%;
+            background-color: #0f2c59; /* Granatowy - barwy oficjalne */
+            color: #ffffff;
+            padding: 20px 40px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 3px solid var(--accent-color);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
-
-        .logo-area h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
             letter-spacing: 1px;
-            transition: var(--transition);
-        }
-
-        .logo-area:hover h1 {
-            color: var(--accent-color);
-        }
-
-        .logo-area p {
-            font-size: 0.8rem;
-            color: #d1d5db;
-        }
-
-        nav a {
-            color: var(--white);
             text-decoration: none;
-            margin-left: 2rem;
-            font-size: 0.9rem;
-            font-weight: 600;
-            position: relative;
-            transition: var(--transition);
+            color: #ffffff;
         }
-
-        nav a::after {
-            content: '';
-            position: absolute;
-            width: 0;
-            height: 2px;
-            bottom: -4px;
-            left: 0;
-            background-color: var(--accent-color);
-            transition: var(--transition);
-        }
-
-        nav a:hover::after {
-            width: 100%;
-        }
-
-        nav a:hover {
-            color: var(--accent-color);
-        }
-
-        /* Sekcja hero z animacją tekstu */
-        .hero {
-            background: linear-gradient(rgba(11, 37, 69, 0.85), rgba(11, 37, 69, 0.85)), url('https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1920&q=80') center/cover fixed;
-            color: var(--white);
-            text-align: center;
-            padding: 7rem 2rem;
-            animation: fadeIn 1s ease-out;
-        }
-
-        .hero h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            color: var(--white);
-        }
-
-        .hero p {
-            font-size: 1.1rem;
-            max-width: 700px;
-            margin: 0 auto;
-            color: #e5e7eb;
-        }
-
-        /* Panel filtrowania dynamicznego */
-        .filter-container {
+        nav {
             display: flex;
-            justify-content: center;
-            gap: 1rem;
-            margin: 3rem 0 2rem;
+            gap: 20px;
             flex-wrap: wrap;
         }
-
-        .filter-btn {
-            background: var(--white);
-            border: 1px solid #cbd5e1;
-            padding: 0.6rem 1.2rem;
-            border-radius: 30px;
-            font-weight: 600;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: var(--transition);
-            color: var(--text-dark);
-        }
-
-        .filter-btn:hover, .filter-btn.active {
-            background: var(--primary-color);
-            color: var(--white);
-            border-color: var(--primary-color);
-            transform: translateY(-2px);
-        }
-
-        /* Główna zawartość */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto 4rem;
-            padding: 0 2rem;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2.5rem;
-        }
-
-        /* Karta absolwenta z płynnym zoomem obrazu */
-        .card {
-            background: var(--white);
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            transition: var(--transition);
-            display: flex;
-            flex-direction: column;
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        .card.hide {
-            opacity: 0;
-            transform: scale(0.95);
-            pointer-events: none;
-            display: none;
-        }
-
-        .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.12);
-        }
-
-        .card-img-wrapper {
-            overflow: hidden;
-            height: 280px;
-        }
-
-        .card-img {
-            height: 100%;
-            background-size: cover;
-            background-position: center;
-            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .card:hover .card-img {
-            transform: scale(1.08);
-        }
-
-        .card-content {
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-        }
-
-        .card-tag {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--accent-color);
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .card-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.5rem;
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-        }
-
-        .card-subtitle {
-            font-size: 0.9rem;
-            color: #64748b;
-            margin-bottom: 1.5rem;
-            font-weight: 600;
-        }
-
-        .card-desc {
-            font-size: 0.95rem;
-            color: #4b5563;
-            margin-bottom: 1.5rem;
-            flex-grow: 1;
-        }
-
-        .card-btn {
-            align-self: flex-start;
-            background: transparent;
-            color: var(--primary-color);
-            border: 1px solid var(--primary-color);
-            padding: 0.6rem 1.2rem;
-            border-radius: 4px;
-            font-weight: 600;
-            font-size: 0.85rem;
+        nav a {
+            color: #ffffff;
             text-decoration: none;
-            transition: var(--transition);
-            position: relative;
-            overflow: hidden;
-            z-index: 1;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        nav a:hover {
+            text-decoration: underline;
         }
 
-        .card-btn::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 0; height: 100%;
-            background: var(--primary-color);
-            transition: var(--transition);
-            z-index: -1;
+        /* Kontener główny */
+        .container {
+            max-width: 960px;
+            margin: 40px auto;
+            padding: 0 20px;
         }
 
-        .card-btn:hover {
-            color: var(--white);
+        /* Tytuł sekcji */
+        .page-title {
+            font-size: 36px;
+            color: #0f2c59;
+            margin-bottom: 10px;
+            text-align: left;
         }
 
-        .card-btn:hover::before {
+        /* Opis nagrody */
+        .award-intro {
+            font-size: 16px;
+            margin-bottom: 50px;
+            padding-top: 20px;
+        }
+        .award-intro h2 {
+            font-size: 24px;
+            color: #8b0000; /* Ciemna czerwień */
+            margin-top: 0;
+            font-weight: bold;
+        }
+        .nominate-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #8b0000;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        .nominate-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Sekcja Laureatów */
+        .section-title {
+            font-size: 28px;
+            color: #0f2c59;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
+            margin-bottom: 40px;
+        }
+
+        /* Karta laureata */
+        .recipient {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+        .recipient-img {
+            flex: 1 1 250px;
+            max-width: 280px;
+        }
+        .recipient-img img {
             width: 100%;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .recipient-info {
+            flex: 2 1 400px;
+        }
+        .recipient-name {
+            font-size: 24px;
+            color: #0f2c59;
+            margin: 0 0 5px 0;
+            font-weight: bold;
+        }
+        .recipient-year {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        /* Lista wszystkich laureatów */
+        .all-recipients {
+            margin-top: 60px;
+        }
+        .year-group {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid #eee;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 15px;
+        }
+        .year-group .year {
+            font-weight: bold;
+            color: #0f2c59;
+            width: 100px;
+            flex-shrink: 0;
+        }
+        .year-group .names {
+            color: #333;
         }
 
         /* Stopka */
         footer {
-            background-color: var(--primary-color);
-            color: var(--white);
+            background-color: #f9f9f9;
             text-align: center;
-            padding: 2.5rem 2rem;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            padding: 30px 20px;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            font-size: 12px;
+            color: #777;
+            margin-top: 60px;
+            border-top: 1px solid #eaeaea;
         }
 
-        footer p {
-            color: #94a3b8;
-            font-size: 0.9rem;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* Responsywność dla małych ekranów */
+        @media (max-width: 600px) {
+            header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            .recipient {
+                flex-direction: column;
+                gap: 20px;
+            }
         }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="logo-area">
-            <h1>KSSiP</h1>
-            <p>Krajowa Szkoła Sądownictwa i Prokuratury</p>
-        </div>
+        <a href="https://ekssip.kssip.gov.pl/" class="logo">E-KSSiP</a>
         <nav>
-            <a href="#">O Szkole</a>
+            <a href="#">O KSSiP</a>
+            <a href="#">Szkolenia Ustawiczne</a>
             <a href="#">Aplikacje</a>
-            <a href="#">Szkolenia</a>
-            <a href="#">Wyróżnienia</a>
+            <a href="#">Absolwenci</a>
+            <a href="#">E-Platforma</a>
         </nav>
     </header>
 
-    <section class="hero">
-        <h2>Nagrody i Wyróżnienia Absolwentów</h2>
-        <p>Uhonorowanie wybitnych przedstawicieli kadr sądownictwa i prokuratury, których wkład w rozwój wymiaru sprawiedliwości stanowi wzór profesjonalizmu i etyki.</p>
-    </section>
+    <div class="container">
+        
+        <h1 class="page-title">Wyróżnienia dla Absolwentów</h1>
 
-    <main class="container">
-        <div class="filter-container">
-            <button class="filter-btn active" data-filter="all">Wszyscy laureati</button>
-            <button class="filter-btn" data-filter="sedziowska">Aplikacja Sędziowska</button>
-            <button class="filter-btn" data-filter="prokuratorska">Aplikacja Prokuratorska</button>
-            <button class="filter-btn" data-filter="naukowe">Nauki Prawne</button>
+        <div class="award-intro">
+            <h2>Nagroda im. Pierwszego Dyrektora KSSiP</h2>
+            <p>Społeczność Krajowej Szkoły Sądownictwa i Prokuratury ustanowiła tę nagrodę, aby uhonorować tradycję służby publicznej i oddania wymiarowi sprawiedliwości. Coroczna nagroda wyróżnia absolwentów KSSiP za ciągłą, rzetelną służbę dobru publicznemu, wybitne osiągnięcia w orzecznictwie lub pracy prokuratorskiej oraz działalność na rzecz społeczeństwa.</p>
+            <p>Nagroda przyznawana jest absolwentom, którzy wykazują się najwyższymi standardami etycznymi, identyfikują problemy prawne, tworzą innowacyjne rozwiązania i mają znaczący wpływ na budowanie zaufania społecznego do organów państwa. Co roku uhonorowany absolwent wygłasza wykład otwarty dla aplikantów podczas inauguracji roku szkoleniowego.</p>
+            <p>Komitet ds. Wyróżnień rozpatruje kandydatury zgłoszone przez innych absolwentów, patronów oraz wykładowców Szkoły. <br>
+            <a href="#" class="nominate-link">Kliknij tutaj, aby zgłosić kandydata &rarr;</a></p>
         </div>
 
-        <div class="grid" id="cards-grid">
-            <article class="card" data-category="sedziowska">
-                <div class="card-img-wrapper">
-                    <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80');"></div>
-                </div>
-                <div class="card-content">
-                    <span class="card-tag">Aplikacja Sędziowska</span>
-                    <h4 class="card-title">dr Anna Kowalska</h4>
-                    <p class="card-subtitle">Absolwentka rocznika 2020 / Sędzia Sądu Rejonowego</p>
-                    <p class="card-desc">Wyróżniona za wybitne wyniki w nauce, wzorowe opanowanie warsztatu sędziowskiego oraz szczególną dbałość o prawa obywatelskie w praktyce orzeczniczej.</p>
-                    <a href="#" class="card-btn">Przeczytaj laudację</a>
-                </div>
-            </article>
+        <h2 class="section-title">Ostatni Laureaci</h2>
 
-            <article class="card" data-category="prokuratorska">
-                <div class="card-img-wrapper">
-                    <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80');"></div>
-                </div>
-                <div class="card-content">
-                    <span class="card-tag">Aplikacja Prokuratorska</span>
-                    <h4 class="card-title">mgr Jan Nowak</h4>
-                    <p class="card-subtitle">Absolwent rocznika 2022 / Prokurator Prokuratury Rejonowej</p>
-                    <p class="card-desc">Nagrodzony za wzorową skuteczność w prowadzonych postępowaniach przygotowawczych oraz wysoki poziom kultury urzędowej.</p>
-                    <a href="#" class="card-btn">Przeczytaj laudację</a>
-                </div>
-            </article>
-
-            <article class="card" data-category="naukowe">
-                <div class="card-img-wrapper">
-                    <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1580894732475-817887712395?auto=format&fit=crop&w=600&q=80');"></div>
-                </div>
-                <div class="card-content">
-                    <span class="card-tag">Wkład w Nauki Prawne</span>
-                    <h4 class="card-title">dr hab. Maria Wiśniewska</h4>
-                    <p class="card-subtitle">Wykładowca KSSiP / Sędzia Sądu Okręgowego</p>
-                    <p class="card-desc">Uhonorowana za wybitny dorobek dydaktyczny, publikacje z zakresu prawa cywilnego oraz zaangażowanie w kształcenie kolejnych pokoleń prawników.</p>
-                    <a href="#" class="card-btn">Przeczytaj laudację</a>
-                </div>
-            </article>
+        <!-- Laureat 1 -->
+        <div class="recipient">
+            <div class="recipient-img">
+                <!-- Zastępcze zdjęcie (w systemie podmienisz URL w atrybucie src) -->
+                <img src="https://via.placeholder.com/280x350/0f2c59/ffffff?text=Zdj%C4%99cie+Laureata" alt="Portret laureata">
+            </div>
+            <div class="recipient-info">
+                <h3 class="recipient-name">Sędzia Anna Kowalska</h3>
+                <div class="recipient-year">Laureatka 2026 | Rocznik Aplikacji 2012</div>
+                <p>Anna Kowalska pełni funkcję sędziego sądu okręgowego od 2018 roku, orzekając w wydziale rodzinnym. Pod jej kierownictwem wdrożono w jej okręgu pionierskie procedury przesłuchań małoletnich, tzw. "Przyjazne Pokoje", minimalizujące stres u dzieci biorących udział w postępowaniach sądowych. Wcześniej pracowała jako asystent sędziego i koordynator ds. mediacji.</p>
+                <p>Jej kariera orzecznicza koncentruje się na ochronie praw najmłodszych, prawie opiekuńczym oraz edukacji prawnej młodzieży. Jest aktywnym członkiem stowarzyszeń sędziowskich i regularnie prowadzi szkolenia dla nowych roczników aplikantów sędziowskich w KSSiP. Ukończyła studia prawnicze na Uniwersytecie Jagiellońskim oraz studia podyplomowe z zakresu psychologii sądowej.</p>
+            </div>
         </div>
-    </main>
+
+        <!-- Laureat 2 -->
+        <div class="recipient">
+            <div class="recipient-img">
+                <img src="https://via.placeholder.com/280x350/8b0000/ffffff?text=Zdj%C4%99cie+Laureata" alt="Portret laureata">
+            </div>
+            <div class="recipient-info">
+                <h3 class="recipient-name">Prokurator Jan Nowak</h3>
+                <div class="recipient-year">Laureat 2025 | Rocznik Aplikacji 2009</div>
+                <p>Jan Nowak jest prokuratorem w Wydziale Zamiejscowym Prokuratury Krajowej, gdzie specjalizuje się w zwalczaniu zorganizowanej przestępczości gospodarczej i cyberprzestępczości. Jako ekspert ds. nowoczesnych technologii w śledztwach, z sukcesem współpracował z organami ścigania na szczeblu europejskim przy rozbijaniu międzynarodowych sieci przestępczych.</p>
+                <p>Oprócz ciężkiej pracy śledczej, prokurator Nowak silnie angażuje się w projekty *pro publico bono*, prowadząc w liceach lekcje o cyberbezpieczeństwie i zagrożeniach w sieci. Jest autorem licznych publikacji z zakresu zwalczania oszustw podatkowych. Jego praca łączy rygorystyczne egzekwowanie prawa z głębokim zrozumieniem społecznych wyzwań XXI wieku.</p>
+            </div>
+        </div>
+
+        <div class="all-recipients">
+            <h2 class="section-title">Wszyscy Laureaci</h2>
+            
+            <div class="year-group">
+                <div class="year">2026</div>
+                <div class="names">Anna Kowalska (Rocznik 2012)</div>
+            </div>
+            <div class="year-group">
+                <div class="year">2025</div>
+                <div class="names">Jan Nowak (Rocznik 2009)</div>
+            </div>
+            <div class="year-group">
+                <div class="year">2024</div>
+                <div class="names">Piotr Wiśniewski (Rocznik 2010), Ewa Czerwińska (Rocznik 2013)</div>
+            </div>
+            <div class="year-group">
+                <div class="year">2023</div>
+                <div class="names">Marta Szymańska (Rocznik 2014)</div>
+            </div>
+            <div class="year-group">
+                <div class="year">2022</div>
+                <div class="names">Tomasz Kaczmarek (Rocznik 2011)</div>
+            </div>
+            <div class="year-group">
+                <div class="year">2021</div>
+                <div class="names">Katarzyna Lewandowska (Rocznik 2010)</div>
+            </div>
+        </div>
+
+    </div>
 
     <footer>
-        <p>&copy; 2026 Krajowa Szkoła Sądownictwa i Prokuratury. Wszelkie prawa zastrzeżone.</p>
+        &copy; 2026 Krajowa Szkoła Sądownictwa i Prokuratury - E-KSSiP.<br>
+        Wszelkie prawa zastrzeżone. Projekt strony oparty na architekturze wyróżnień i nagród absolwenckich.
     </footer>
-
-    <script>
-        const filterButtons = document.querySelectorAll('.filter-btn');
-        const cards = document.querySelectorAll('.card');
-
-        filterButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                // Usuń klasę active ze wszystkich przycisków i dodaj do klikniętego
-                filterButtons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-
-                const filterValue = button.getAttribute('data-filter');
-
-                cards.forEach(card => {
-                    if (filterValue === 'all' || card.getAttribute('data-category') === filterValue) {
-                        card.classList.remove('hide');
-                    } else {
-                        card.classList.add('hide');
-                    }
-                });
-            });
-        });
-    </script>
 
 </body>
 </html>
