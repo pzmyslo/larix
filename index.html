@@ -12,6 +12,7 @@
             --text-dark: #333333;
             --bg-light: #f8f9fa;
             --white: #ffffff;
+            --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         * {
@@ -25,27 +26,37 @@
             color: var(--text-dark);
             background-color: var(--bg-light);
             line-height: 1.6;
+            overflow-x: hidden;
         }
 
-        /* Nagłówek */
+        /* Nagłówek z efektem powiększenia logo */
         header {
             background-color: var(--primary-color);
             color: var(--white);
-            padding: 2rem 5%;
+            padding: 1.5rem 5%;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 3px solid var(--accent-color);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         }
 
         .logo-area h1 {
             font-family: 'Playfair Display', serif;
             font-size: 1.5rem;
             letter-spacing: 1px;
+            transition: var(--transition);
+        }
+
+        .logo-area:hover h1 {
+            color: var(--accent-color);
         }
 
         .logo-area p {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: #d1d5db;
         }
 
@@ -55,19 +66,36 @@
             margin-left: 2rem;
             font-size: 0.9rem;
             font-weight: 600;
-            transition: color 0.3s;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: var(--accent-color);
+            transition: var(--transition);
+        }
+
+        nav a:hover::after {
+            width: 100%;
         }
 
         nav a:hover {
             color: var(--accent-color);
         }
 
-        /* Sekcja hero */
+        /* Sekcja hero z animacją tekstu */
         .hero {
-            background: linear-gradient(rgba(11, 37, 69, 0.85), rgba(11, 37, 69, 0.85)), url('https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1920&q=80') center/cover;
+            background: linear-gradient(rgba(11, 37, 69, 0.85), rgba(11, 37, 69, 0.85)), url('https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1920&q=80') center/cover fixed;
             color: var(--white);
             text-align: center;
-            padding: 5rem 2rem;
+            padding: 7rem 2rem;
+            animation: fadeIn 1s ease-out;
         }
 
         .hero h2 {
@@ -84,29 +112,39 @@
             color: #e5e7eb;
         }
 
-        /* Główna zawartość - Wyróżnienia */
+        /* Panel filtrowania dynamicznego */
+        .filter-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin: 3rem 0 2rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: var(--white);
+            border: 1px solid #cbd5e1;
+            padding: 0.6rem 1.2rem;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-dark);
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--primary-color);
+            color: var(--white);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        /* Główna zawartość */
         .container {
             max-width: 1200px;
-            margin: 4rem auto;
+            margin: 0 auto 4rem;
             padding: 0 2rem;
-        }
-
-        .section-title {
-            text-align: center;
-            font-family: 'Playfair Display', serif;
-            font-size: 2.2rem;
-            color: var(--primary-color);
-            margin-bottom: 3rem;
-            position: relative;
-        }
-
-        .section-title::after {
-            content: '';
-            display: block;
-            width: 60px;
-            height: 3px;
-            background-color: var(--accent-color);
-            margin: 0.5rem auto 0;
         }
 
         .grid {
@@ -115,27 +153,45 @@
             gap: 2.5rem;
         }
 
-        /* Karta absolwenta */
+        /* Karta absolwenta z płynnym zoomem obrazu */
         .card {
             background: var(--white);
             border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: var(--transition);
             display: flex;
             flex-direction: column;
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .card.hide {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+            display: none;
         }
 
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+        }
+
+        .card-img-wrapper {
+            overflow: hidden;
+            height: 280px;
         }
 
         .card-img {
-            height: 280px;
-            background-color: #e2e8f0;
+            height: 100%;
             background-size: cover;
             background-position: center;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .card:hover .card-img {
+            transform: scale(1.08);
         }
 
         .card-content {
@@ -185,12 +241,27 @@
             font-weight: 600;
             font-size: 0.85rem;
             text-decoration: none;
-            transition: all 0.3s;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .card-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 0; height: 100%;
+            background: var(--primary-color);
+            transition: var(--transition);
+            z-index: -1;
         }
 
         .card-btn:hover {
-            background: var(--primary-color);
             color: var(--white);
+        }
+
+        .card-btn:hover::before {
+            width: 100%;
         }
 
         /* Stopka */
@@ -199,13 +270,17 @@
             color: var(--white);
             text-align: center;
             padding: 2.5rem 2rem;
-            margin-top: 5rem;
-            font-size: 0.9rem;
             border-top: 1px solid rgba(255,255,255,0.1);
         }
 
         footer p {
             color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -220,7 +295,7 @@
             <a href="#">O Szkole</a>
             <a href="#">Aplikacje</a>
             <a href="#">Szkolenia</a>
-            <a href="#">Wyróżnienia Absolwentów</a>
+            <a href="#">Wyróżnienia</a>
         </nav>
     </header>
 
@@ -230,11 +305,18 @@
     </section>
 
     <main class="container">
-        <h3 class="section-title">Laureati nagród rocznych</h3>
-        
-        <div class="grid">
-            <article class="card">
-                <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80');"></div>
+        <div class="filter-container">
+            <button class="filter-btn active" data-filter="all">Wszyscy laureati</button>
+            <button class="filter-btn" data-filter="sedziowska">Aplikacja Sędziowska</button>
+            <button class="filter-btn" data-filter="prokuratorska">Aplikacja Prokuratorska</button>
+            <button class="filter-btn" data-filter="naukowe">Nauki Prawne</button>
+        </div>
+
+        <div class="grid" id="cards-grid">
+            <article class="card" data-category="sedziowska">
+                <div class="card-img-wrapper">
+                    <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80');"></div>
+                </div>
                 <div class="card-content">
                     <span class="card-tag">Aplikacja Sędziowska</span>
                     <h4 class="card-title">dr Anna Kowalska</h4>
@@ -244,8 +326,10 @@
                 </div>
             </article>
 
-            <article class="card">
-                <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80');"></div>
+            <article class="card" data-category="prokuratorska">
+                <div class="card-img-wrapper">
+                    <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=600&q=80');"></div>
+                </div>
                 <div class="card-content">
                     <span class="card-tag">Aplikacja Prokuratorska</span>
                     <h4 class="card-title">mgr Jan Nowak</h4>
@@ -255,8 +339,10 @@
                 </div>
             </article>
 
-            <article class="card">
-                <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1580894732475-817887712395?auto=format&fit=crop&w=600&q=80');"></div>
+            <article class="card" data-category="naukowe">
+                <div class="card-img-wrapper">
+                    <div class="card-img" style="background-image: url('https://images.unsplash.com/photo-1580894732475-817887712395?auto=format&fit=crop&w=600&q=80');"></div>
+                </div>
                 <div class="card-content">
                     <span class="card-tag">Wkład w Nauki Prawne</span>
                     <h4 class="card-title">dr hab. Maria Wiśniewska</h4>
@@ -271,6 +357,29 @@
     <footer>
         <p>&copy; 2026 Krajowa Szkoła Sądownictwa i Prokuratury. Wszelkie prawa zastrzeżone.</p>
     </footer>
+
+    <script>
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const cards = document.querySelectorAll('.card');
+
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Usuń klasę active ze wszystkich przycisków i dodaj do klikniętego
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                const filterValue = button.getAttribute('data-filter');
+
+                cards.forEach(card => {
+                    if (filterValue === 'all' || card.getAttribute('data-category') === filterValue) {
+                        card.classList.remove('hide');
+                    } else {
+                        card.classList.add('hide');
+                    }
+                });
+            });
+        });
+    </script>
 
 </body>
 </html>
